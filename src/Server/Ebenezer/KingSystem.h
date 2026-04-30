@@ -161,13 +161,13 @@ public:
 
 	// ----- Royal command actions (matches client UICmdList CMD_LIST_CAT_KING) -----
 	//   /RoyalOrder       — kingdom-wide announcement
-	//   /Prize / /Reward  — give an item/gold to a target
+	//   /Reward           — pay gold from the treasury to a target
 	//   /Rain / /Snow     — change weather across the realm
 	//   /Clear            — clear weather
 	//   /ExperiencePoint  — exp event (already covered by KING_EVENT_EXP)
 	//   /DropRate         — gold drop event (already covered by KING_EVENT_NOAH)
+	// /Prize is intentionally NOT supported — kings don't hand out items.
 	void RoyalOrder(int nation, std::string_view kingName, std::string_view message);
-	bool RoyalPrize(int nation, std::string_view recipient, int itemId, int count);
 	bool RoyalReward(int nation, std::string_view recipient, int gold);
 	void RoyalWeather(uint8_t weatherKind);   // 1=fine, 2=rain, 3=snow
 

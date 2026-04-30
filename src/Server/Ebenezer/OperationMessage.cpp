@@ -485,11 +485,6 @@ bool OperationMessage::Process(const std::string_view command)
 				KingOrder();
 				break;
 
-			// +king_prize <recipient> <itemId> [count]
-			case "+king_prize"_djb2:
-				KingPrize();
-				break;
-
 			// +king_reward <recipient> <gold>
 			case "+king_reward"_djb2:
 				KingReward();
@@ -1329,24 +1324,6 @@ void OperationMessage::KingOrder()
 
 	const int nation = _srcUser->m_pUserData->m_bNation;
 	_main->m_KingSystem.RoyalOrder(nation, _srcUser->m_pUserData->m_id, body);
-}
-
-// +king_prize <recipient> <itemId> [count]
-//   Drops the given item count into the recipient's inventory. Mirrors
-//   client CMD_PRIZE.
-void OperationMessage::KingPrize()
-{
-	if (_srcUser == nullptr || GetArgCount() < 2)
-		return;
-
-	const std::string& recipient = ParseString(0);
-	const int          itemId    = ParseInt(1);
-	const int          count     = (GetArgCount() >= 3) ? ParseInt(2) : 1;
-	const int          nation    = _srcUser->m_pUserData->m_bNation;
-
-	const bool ok = _main->m_KingSystem.RoyalPrize(nation, recipient, itemId, count);
-	spdlog::info("OperationMessage::KingPrize: nation={} recipient='{}' itemId={} count={} ok={}",
-		nation, recipient, itemId, count, ok);
 }
 
 // +king_reward <recipient> <gold>

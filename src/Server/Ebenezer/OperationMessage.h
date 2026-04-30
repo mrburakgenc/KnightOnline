@@ -114,7 +114,6 @@ protected:
 	void KingNotice();
 	void KingAutoCycle();
 	void KingOrder();
-	void KingPrize();
 	void KingReward();
 	void KingWeather();
 #endif

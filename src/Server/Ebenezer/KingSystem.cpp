@@ -675,38 +675,6 @@ void CKingSystem::RoyalOrder(int nation, std::string_view kingName, std::string_
 		std::string(kingName), std::string(message));
 }
 
-bool CKingSystem::RoyalPrize(int nation, std::string_view recipient, int itemId, int count)
-{
-	if (!IsValidNation(nation) || m_pMain == nullptr)
-		return false;
-	if (count <= 0)
-		count = 1;
-
-	auto pUser = m_pMain->GetUserPtr(std::string(recipient).c_str(), NameType::Character);
-	if (pUser == nullptr || pUser->m_pUserData == nullptr)
-	{
-		spdlog::warn("KingSystem::RoyalPrize: recipient '{}' not online", std::string(recipient));
-		return false;
-	}
-	if (pUser->m_pUserData->m_bNation != nation)
-	{
-		spdlog::warn("KingSystem::RoyalPrize: nation mismatch for '{}'", std::string(recipient));
-		return false;
-	}
-
-	const bool gave = pUser->GiveItem(itemId, static_cast<int16_t>(count));
-	spdlog::info("KingSystem::RoyalPrize: recipient='{}' itemId={} count={} ok={}",
-		std::string(recipient), itemId, count, gave);
-	if (gave)
-	{
-		std::string msg = "[Royal Prize] ";
-		msg += recipient;
-		msg += " has been gifted by the King!";
-		BroadcastNationAnnouncement(nation, msg);
-	}
-	return gave;
-}
-
 bool CKingSystem::RoyalReward(int nation, std::string_view recipient, int gold)
 {
 	if (!IsValidNation(nation) || m_pMain == nullptr || gold == 0)
@@ -721,21 +689,38 @@ bool CKingSystem::RoyalReward(int nation, std::string_view recipient, int gold)
 	if (pUser->m_pUserData->m_bNation != nation)
 		return false;
 
-	// Bound at MAX_GOLD (signed int32 ceiling, 21 oku per the data type doc).
-	const int newGold = std::min<int64_t>(
-		std::max<int64_t>(0, static_cast<int64_t>(pUser->m_pUserData->m_iGold) + gold),
-		std::numeric_limits<int32_t>::max());
+	// Clamp the new balance to MAX_GOLD (signed int32 ceiling).
+	const int32_t prevGold = pUser->m_pUserData->m_iGold;
+	const int64_t newGold  = std::min<int64_t>(
+        std::max<int64_t>(0, static_cast<int64_t>(prevGold) + gold),
+        std::numeric_limits<int32_t>::max());
 	pUser->m_pUserData->m_iGold = static_cast<int32_t>(newGold);
+	const int32_t delta = pUser->m_pUserData->m_iGold - prevGold;
+
+	// Push the visible gold update to the recipient — without WIZ_GOLD_CHANGE
+	// the client keeps showing the old number until relog.
+	if (delta != 0)
+	{
+		char    sendBuffer[16] {};
+		int     sendIndex = 0;
+		const uint8_t type = (delta >= 0) ? GOLD_CHANGE_GAIN : GOLD_CHANGE_LOSE;
+		const uint32_t mag = static_cast<uint32_t>(std::abs(delta));
+		SetByte(sendBuffer, WIZ_GOLD_CHANGE, sendIndex);
+		SetByte(sendBuffer, type, sendIndex);
+		SetDWORD(sendBuffer, mag, sendIndex);
+		SetDWORD(sendBuffer, pUser->m_pUserData->m_iGold, sendIndex);
+		pUser->Send(sendBuffer, sendIndex);
+	}
 
 	std::string msg = "[Royal Reward] ";
 	msg += recipient;
-	msg += " has received ";
-	msg += std::to_string(gold);
-	msg += " gold from the King!";
+	msg += (gold >= 0) ? " has received " : " has been fined ";
+	msg += std::to_string(std::abs(gold));
+	msg += (gold >= 0) ? " gold from the King!" : " gold by the King!";
 	BroadcastNationAnnouncement(nation, msg);
 
-	spdlog::info("KingSystem::RoyalReward: recipient='{}' gold={} newBalance={}",
-		std::string(recipient), gold, pUser->m_pUserData->m_iGold);
+	spdlog::info("KingSystem::RoyalReward: recipient='{}' delta={} newBalance={}",
+		std::string(recipient), delta, pUser->m_pUserData->m_iGold);
 	return true;
 }
 
@@ -1196,16 +1181,32 @@ void CKingSystem::BroadcastNationAnnouncement(int nation, std::string_view messa
 	const size_t maxLen = 120;
 	const std::string_view body { message.data(), std::min(message.size(), maxLen) };
 
+	// Pass A: WAR_SYSTEM_CHAT (e_ChatMode N3_CHAT_WAR=8) — drives the big top
+	// scrolling banner (m_pWarMessage->SetMessage) on the client. The client's
+	// e_ChatMode enum tops out at 12, so ANNOUNCEMENT_CHAT (17) is silently
+	// dropped — that's why kings' announcements weren't appearing.
 	char sendBuffer[256] {};
 	int  sendIndex = 0;
 	SetByte(sendBuffer, WIZ_CHAT, sendIndex);
-	SetByte(sendBuffer, ANNOUNCEMENT_CHAT, sendIndex);
+	SetByte(sendBuffer, WAR_SYSTEM_CHAT, sendIndex);
 	SetByte(sendBuffer, static_cast<uint8_t>(nation), sendIndex);
-	SetShort(sendBuffer, -1, sendIndex);                 // sender socket id (anon)
-	SetString1(sendBuffer, std::string_view("King System"), sendIndex); // 1-byte len + name
-	SetString2(sendBuffer, body, sendIndex);             // 2-byte len + body
-
+	SetShort(sendBuffer, -1, sendIndex);                  // sender socket id (anon)
+	SetByte(sendBuffer, 0, sendIndex);                    // empty sender name
+	SetString2(sendBuffer, body, sendIndex);              // 2-byte len + body
 	m_pMain->Send_All(sendBuffer, sendIndex, nullptr, nation);
+
+	// Pass B: PUBLIC_CHAT — also drop it into the chat log so players who
+	// missed the banner can scroll back. Mirrors the AISocket war broadcast
+	// pattern (banner + log entry).
+	char logBuffer[256] {};
+	int  logIndex = 0;
+	SetByte(logBuffer, WIZ_CHAT, logIndex);
+	SetByte(logBuffer, PUBLIC_CHAT, logIndex);
+	SetByte(logBuffer, static_cast<uint8_t>(nation), logIndex);
+	SetShort(logBuffer, -1, logIndex);
+	SetByte(logBuffer, 0, logIndex);
+	SetString2(logBuffer, body, logIndex);
+	m_pMain->Send_All(logBuffer, logIndex, nullptr, nation);
 }
 
 void CKingSystem::PacketProcess(CUser* pUser, char* pBuf)
@@ -1540,21 +1541,10 @@ void CKingSystem::HandleEvent(CUser* pUser, char* pBuf)
 			break;
 		}
 		case KING_EVENT_PRIZE:
-		{
-			// Payload (best-effort): 1-byte name length + name + DWORD itemId
-			//                        + WORD count.
-			char    target[64] {};
-			int     nameLen = GetByte(pBuf, index);
-			if (nameLen <= 0 || nameLen > 21)
-				return;
-			memcpy(target, pBuf + index, nameLen);
-			target[nameLen] = '\0';
-			index += nameLen;
-			const int     itemId = GetDWORD(pBuf, index);
-			const int16_t count  = GetShort(pBuf, index);
-			RoyalPrize(nation, target, itemId, count);
+			// Intentionally unsupported: kings do not hand out items.
+			// Use /Reward (gold) for treasury payouts; /Prize is ignored.
+			spdlog::info("KingSystem::HandleEvent: KING_EVENT_PRIZE ignored (disabled)");
 			break;
-		}
 		case KING_EVENT_NOTICE:
 		{
 			// Payload: 2-byte length + UTF-8 message body. The king's
