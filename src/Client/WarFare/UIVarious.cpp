@@ -212,7 +212,10 @@ void CUIState::UpdateRealmPoint(int iLoyalty, int iLoyaltyMonthly) // 국가 기
 
 void CUIState::UpdateHP(int iVal, int iValMax)
 {
-	__ASSERT(iVal >= 0 && iVal < 10000 && iValMax >= 0 && iValMax < 10000, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+	// Original assert capped values at 10000 — that's tight for level 80+ chars
+	// (full Chitin / royal-tier gear pushes HP comfortably past 15000) and
+	// fires a debug-time crash dialog. Sanity-check is non-negative only.
+	__ASSERT(iVal >= 0 && iValMax >= 0, "negative HP in UpdateHP");
 	if (m_pText_HP == nullptr)
 		return;
 
