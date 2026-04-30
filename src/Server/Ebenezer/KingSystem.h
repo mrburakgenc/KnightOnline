@@ -3,6 +3,22 @@
 
 #pragma once
 
+// NOTE (VSA migration): this file is the orchestrator for the king-system
+// slice. Domain types and the persistence boundary have moved into
+//   features/king-system/domain/
+//   features/king-system/persistence/
+// This translation unit will itself relocate to
+//   features/king-system/handlers/KingSystem.{h,cpp}
+// once a follow-up migration commit also moves the WIZ_KING packet handler
+// and `+king_*` GM commands into features/king-system/presentation/.
+//
+// See ARCHITECTURE.md (this directory) for the full migration plan.
+
+#include <Ebenezer/features/king-system/domain/KingConstants.h>
+#include <Ebenezer/features/king-system/domain/KingNationState.h>
+#include <Ebenezer/features/king-system/persistence/KingSystemRepository.h>
+
+#include <array>
 #include <chrono>
 #include <cstdint>
 #include <string>
@@ -14,61 +30,16 @@ namespace Ebenezer
 class CUser;
 class EbenezerApp;
 
-// Nation IDs as used by USERDATA.Nation and KING_SYSTEM.byNation.
-constexpr int KING_NATION_KARUS    = 1;
-constexpr int KING_NATION_ELMORAD  = 2;
-constexpr int KING_NATION_COUNT    = 2;
-
-// KING_SYSTEM.byType phase machine. Values come from the original
-// KING_UPDATE_ELECTION_STATUS stored procedure semantics.
-constexpr uint8_t KING_PHASE_NO_KING            = 0;
-constexpr uint8_t KING_PHASE_NOMINATION_OPEN    = 1;
-constexpr uint8_t KING_PHASE_NOMINATION_CLOSED  = 2;
-constexpr uint8_t KING_PHASE_VOTING             = 3;
-constexpr uint8_t KING_PHASE_VOTE_CLOSED        = 4;
-constexpr uint8_t KING_PHASE_KING_ACTIVE        = 7;
-
-// In-memory state for a single nation's monarchy. Mirrors the most
-// gameplay-relevant columns of the KING_SYSTEM table.
-struct KingNationState
-{
-	uint8_t     byType            = KING_PHASE_NO_KING;
-	std::string strKingName;
-	uint8_t     byTerritoryTariff = 0;   // % tariff on shop sales
-	int         nTerritoryTax     = 0;   // accumulated territory revenue
-	int         nNationalTreasury = 0;   // total treasury
-
-	// Active events (in-memory only — not yet persisted).
-	bool                                  noahEventActive       = false;
-	int                                   noahEventBonusPercent = 0;
-	std::chrono::system_clock::time_point noahEventEnd;
-
-	bool                                  expEventActive        = false;
-	int                                   expEventBonusPercent  = 0;
-	std::chrono::system_clock::time_point expEventEnd;
-
-	// Phase-4 scheduler: when a phase is timed (nomination / voting auto-close,
-	// scheduled election kickoff), Tick() advances the state machine once
-	// system_clock::now() reaches this deadline.
-	bool                                  schedulerActive       = false;
-	std::chrono::system_clock::time_point phaseDeadline;
-	uint8_t                               nextPhaseOnDeadline   = KING_PHASE_NO_KING;
-};
-
 // CKingSystem owns the per-nation monarchy state for the running server.
 //
 // Lifecycle:
 //   - Single instance owned by EbenezerApp.
-//   - Initialised at server startup via InitDefaults() (Phase 1) or, in a
-//     future iteration, hydrated from the KING_SYSTEM table through Aujard.
-//   - Mutated by GM commands (+set_king, +king_event, +king_tax) and by
-//     incoming WIZ_KING client packets routed through PacketProcess().
-//   - Tick() expires timed events; called from the main game loop.
-//
-// Phase 1 scope: tax management, NOAH/EXP nation-wide events, GM-driven
-// installation/removal of kings. Election and impeachment workflows are
-// declared but only stubbed — future phases will drive them off the
-// scheduled byType phase machine.
+//   - Initialised at server startup via InitDefaults() and hydrated from the
+//     KING_SYSTEM table through the repository at LoadFromDb().
+//   - Mutated by GM commands (+set_king, +king_event, +king_tax, +royalorder,
+//     etc.) and by incoming WIZ_KING client packets routed through
+//     PacketProcess().
+//   - Tick() expires timed events and fires phase-scheduler transitions.
 class CKingSystem
 {
 public:
@@ -89,11 +60,13 @@ public:
 	// errors are logged but don't propagate so gameplay isn't blocked.
 	void SaveNation(int nation);
 
-	// Per-tick maintenance. Expires events whose deadline has elapsed.
+	// Per-tick maintenance. Expires events whose deadline has elapsed and
+	// fires any due phase transitions.
 	void Tick();
 
 	// Entry point for WIZ_KING client packets. Reads the sub-opcode and
-	// dispatches to a handler.
+	// dispatches to a handler. (Will move to features/king-system/presentation/
+	// in a follow-up migration commit.)
 	void PacketProcess(CUser* pUser, char* pBuf);
 
 	// ----- Queries -----
@@ -116,63 +89,42 @@ public:
 	void StartExpEvent(int nation, int bonusPercent, int durationMinutes);
 	void StopEvents(int nation);
 
-	// ----- Election state machine (Phase 3) -----
+	// ----- Election state machine -----
 	// Drives the byType phase transitions:
 	//   0 (no king) → 1 (nomination open) → 2 (nomination closed)
 	//      → 3 (voting open) → 4 (voting closed) → 7 (king crowned)
-	// Each transition writes the new byType to KING_SYSTEM via SaveNation.
 	void StartNomination(int nation);
 	void CloseNomination(int nation);
 	void StartVoting(int nation);
-	void CloseVoting(int nation);                 // tallies, crowns winner
-	void CancelElection(int nation);              // resets to byType=0
+	void CloseVoting(int nation);
+	void CancelElection(int nation);
 	bool NominateCandidate(
 		std::string_view candidateName, int nation, int tributeMoney, std::string& errorOut);
 	bool CastBallot(std::string_view voterAccount, std::string_view voterChar, int nation,
 		std::string_view candidateName, std::string& errorOut);
 
-	// ----- Impeachment workflow (Phase 3) -----
-	// Impeachment is a parallel state. We track it via the existing
-	// KING_BALLOT_BOX (reused) and report results from KING_IMPEACHMENT_RESULT
-	// semantics (total voters vs agree voters).
+	// ----- Impeachment workflow -----
 	void StartImpeachment(int nation);
 	void CloseImpeachment(int nation, int requiredAgreePercent = 51);
 	bool CastImpeachmentVote(std::string_view voterAccount, std::string_view voterChar, int nation,
 		bool agree, std::string& errorOut);
 
-	// ----- Scheduler (Phase 4) -----
-	// Schedules an automatic phase transition that Tick() will fire once the
-	// deadline is reached. Cancels the previous schedule for that nation if
-	// any. Use durationMinutes <= 0 to clear.
+	// ----- Scheduler -----
 	void ScheduleNextPhase(int nation, uint8_t nextPhase, int durationMinutes);
-
-	// Convenience helper that walks the full election cycle automatically:
-	//   now → nomination (auto-close after nominationMin)
-	//        → voting     (auto-close after votingMin → tally → king crowned)
 	void RunFullElection(int nation, int nominationMin, int votingMin);
 
-	// ----- Notice board (Phase 4) -----
-	// Stores or fetches the candidate manifesto text from
-	// KING_CANDIDACY_NOTICE_BOARD. Returns false on DB error.
+	// ----- Notice board -----
 	bool WriteCandidateNotice(
 		int nation, std::string_view candidateName, std::string_view content);
 	bool ReadCandidateNotice(
 		int nation, std::string_view candidateName, std::string& contentOut);
 
-	// ----- Royal command actions (matches client UICmdList CMD_LIST_CAT_KING) -----
-	//   /RoyalOrder       — kingdom-wide announcement
-	//   /Reward           — pay gold from the treasury to a target
-	//   /Rain / /Snow     — change weather across the realm
-	//   /Clear            — clear weather
-	//   /ExperiencePoint  — exp event (already covered by KING_EVENT_EXP)
-	//   /DropRate         — gold drop event (already covered by KING_EVENT_NOAH)
+	// ----- Royal command actions -----
 	// /Prize is intentionally NOT supported — kings don't hand out items.
 	void RoyalOrder(int nation, std::string_view kingName, std::string_view message);
 	bool RoyalReward(int nation, std::string_view recipient, int gold);
 	void RoyalWeather(uint8_t weatherKind);   // 1=fine, 2=rain, 3=snow
 
-	// Sends an ANNOUNCEMENT_CHAT line to every user in `nation` (1 or 2),
-	// or to everyone if nation == 0.
 	void BroadcastNationAnnouncement(int nation, std::string_view message);
 
 private:
@@ -183,15 +135,13 @@ private:
 	void HandleEvent(CUser* pUser, char* pBuf);
 	void HandleKingNpc(CUser* pUser, char* pBuf);
 
-	// If the given character is currently online, sets/clears Rank=1/Title=1
-	// and refreshes the client UI. Persistence happens on next user save.
 	void ApplyRoyaltyToOnlineUser(const std::string& charName, bool isKing);
 
-	// Helpers
 	bool IsValidNation(int nation) const;
 	int  NationToIndex(int nation) const { return nation - 1; }
 
-	KingNationState _states[KING_NATION_COUNT] {};
+	std::array<KingNationState, KING_NATION_COUNT> _states {};
+	KingSystemRepository                           _repo {};
 
 	// Voting duration to use when the scheduler advances from nomination →
 	// voting. Set by RunFullElection. Falls back to 30 min if zero.

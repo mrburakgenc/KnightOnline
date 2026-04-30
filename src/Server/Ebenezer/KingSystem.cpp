@@ -5,6 +5,8 @@
 #include "User.h"
 #include "Define.h"
 
+#include <Ebenezer/shared/infrastructure/persistence/SqlHelpers.h>
+
 #include <db-library/Connection.h>
 #include <db-library/ConnectionManager.h>
 #include <db-library/PoolConnection.h>
@@ -21,6 +23,12 @@
 
 namespace Ebenezer
 {
+
+// Pull the shared SQL helpers into the local namespace so existing call
+// sites (`ExecuteSql(sql, "Context")`, `SqlEscape(name)`) compile unchanged
+// while the heavier election/impeachment/voting methods migrate later.
+using Shared::Persistence::ExecuteSql;
+using Shared::Persistence::SqlEscape;
 
 namespace
 {
@@ -264,52 +272,9 @@ int CKingSystem::GetNoahEventBonus(int nation) const
 // stored procedures so behaviour stays inspectable and we don't depend on
 // the procs being up-to-date.
 
-namespace
-{
-
-// Wraps a query and returns true on success. Errors are logged but never
-// propagate so a transient DB hiccup doesn't kill the calling action.
-bool ExecuteSql(std::string_view sql, std::string_view context)
-{
-	try
-	{
-		auto poolConn = db::ConnectionManager::CreatePoolConnection(modelUtil::DbType::GAME);
-		if (poolConn == nullptr)
-		{
-			spdlog::error("KingSystem::{}: failed to obtain DB pool connection", context);
-			return false;
-		}
-		nanodbc::statement stmt = poolConn->CreateStatement(std::string(sql));
-		nanodbc::execute(stmt);
-		return true;
-	}
-	catch (const nanodbc::database_error& dbErr)
-	{
-		spdlog::error("KingSystem::{}: nanodbc error: {}", context, dbErr.what());
-	}
-	catch (const std::exception& ex)
-	{
-		spdlog::error("KingSystem::{}: unexpected error: {}", context, ex.what());
-	}
-	return false;
-}
-
-// Single-quote escape for inline SQL string literals.
-std::string SqlEscape(std::string_view in)
-{
-	std::string out;
-	out.reserve(in.size() + 4);
-	for (char c : in)
-	{
-		if (c == '\'')
-			out += "''";
-		else
-			out += c;
-	}
-	return out;
-}
-
-}
+// (Local ExecuteSql / SqlEscape helpers were lifted to
+//  shared/infrastructure/persistence/SqlHelpers.{h,cpp} during the VSA
+//  migration; see the using-declarations near the top of this file.)
 
 void CKingSystem::StartNomination(int nation)
 {
@@ -752,54 +717,15 @@ void CKingSystem::RoyalWeather(uint8_t weatherKind)
 bool CKingSystem::WriteCandidateNotice(
 	int nation, std::string_view candidateName, std::string_view content)
 {
-	if (!IsValidNation(nation))
-		return false;
-	if (candidateName.empty() || candidateName.size() > 21)
-		return false;
-	const size_t maxLen = 1024;
-	if (content.size() > maxLen)
-		content = content.substr(0, maxLen);
-
-	const std::string nameEsc    = SqlEscape(candidateName);
-	const std::string contentEsc = SqlEscape(content);
-
-	// Upsert: delete then insert. KING_CANDIDACY_NOTICE_BOARD has no PK on
-	// (strUserID, byNation), so we keep ordering simple by clearing first.
-	std::string sql = "DELETE FROM KING_CANDIDACY_NOTICE_BOARD WHERE byNation = "
-		+ std::to_string(nation) + " AND strUserID = '" + nameEsc + "'; "
-		+ "INSERT INTO KING_CANDIDACY_NOTICE_BOARD (strUserID, byNation, sNoticeLen, strNotice) "
-		+ "VALUES ('" + nameEsc + "', " + std::to_string(nation) + ", "
-		+ std::to_string(content.size()) + ", CAST('" + contentEsc + "' AS VARBINARY(1024)))";
-	return ExecuteSql(sql, "WriteCandidateNotice");
+	// Delegate to the slice's persistence layer; orchestrator stays out of
+	// nanodbc/SQL details.
+	return _repo.WriteCandidateNotice(nation, candidateName, content);
 }
 
 bool CKingSystem::ReadCandidateNotice(
 	int nation, std::string_view candidateName, std::string& contentOut)
 {
-	contentOut.clear();
-	if (!IsValidNation(nation))
-		return false;
-
-	const std::string nameEsc = SqlEscape(candidateName);
-	try
-	{
-		auto poolConn = db::ConnectionManager::CreatePoolConnection(modelUtil::DbType::GAME);
-		if (poolConn == nullptr)
-			return false;
-		std::string sql = "SELECT CAST(strNotice AS VARCHAR(1024)) FROM "
-						  "KING_CANDIDACY_NOTICE_BOARD WHERE byNation = "
-			+ std::to_string(nation) + " AND strUserID = '" + nameEsc + "'";
-		auto stmt   = poolConn->CreateStatement(sql);
-		auto result = nanodbc::execute(stmt);
-		if (result.next())
-			contentOut = result.get<nanodbc::string>(0, "");
-		return true;
-	}
-	catch (const nanodbc::database_error& dbErr)
-	{
-		spdlog::error("KingSystem::ReadCandidateNotice: {}", dbErr.what());
-	}
-	return false;
+	return _repo.ReadCandidateNotice(nation, candidateName, contentOut);
 }
 
 // ---------------------------------------------------------------------------
@@ -956,112 +882,17 @@ bool CKingSystem::CastImpeachmentVote(std::string_view voterAccount, std::string
 
 bool CKingSystem::LoadFromDb()
 {
-	try
-	{
-		auto poolConn = db::ConnectionManager::CreatePoolConnection(modelUtil::DbType::GAME);
-		if (poolConn == nullptr)
-		{
-			spdlog::error("KingSystem::LoadFromDb: failed to obtain DB pool connection");
-			return false;
-		}
-
-		nanodbc::statement stmt = poolConn->CreateStatement(
-			"SELECT byNation, byType, strKingName, byTerritoryTariff, nTerritoryTax, "
-			"nNationalTreasury FROM KING_SYSTEM");
-		nanodbc::result    result = nanodbc::execute(stmt);
-
-		int loadedRows = 0;
-		while (result.next())
-		{
-			const int nation = result.get<int>(0);
-			if (!IsValidNation(nation))
-				continue;
-
-			auto& s             = _states[NationToIndex(nation)];
-			s.byType            = static_cast<uint8_t>(result.get<int>(1, 0));
-			s.strKingName       = result.get<nanodbc::string>(2, "");
-			s.byTerritoryTariff = static_cast<uint8_t>(result.get<int>(3, 0));
-			s.nTerritoryTax     = result.get<int>(4, 0);
-			s.nNationalTreasury = result.get<int>(5, 0);
-			++loadedRows;
-
-			spdlog::info("KingSystem::LoadFromDb: nation={} byType={} king='{}' tariff={} "
-						 "tax={} treasury={}",
-				nation, s.byType, s.strKingName, s.byTerritoryTariff, s.nTerritoryTax,
-				s.nNationalTreasury);
-		}
-
-		if (loadedRows == 0)
-			spdlog::warn("KingSystem::LoadFromDb: KING_SYSTEM table is empty; using defaults");
-		return true;
-	}
-	catch (const nanodbc::database_error& dbErr)
-	{
-		spdlog::error("KingSystem::LoadFromDb: nanodbc error: {}", dbErr.what());
-	}
-	catch (const std::exception& ex)
-	{
-		spdlog::error("KingSystem::LoadFromDb: unexpected error: {}", ex.what());
-	}
-	return false;
+	// Persistence boundary: orchestrator delegates the read to the slice's
+	// repository, which fills in `_states` directly. Returns true if at
+	// least one row was hydrated; otherwise the in-memory defaults stand.
+	return _repo.LoadAll(_states);
 }
 
 void CKingSystem::SaveNation(int nation)
 {
 	if (!IsValidNation(nation))
 		return;
-	const auto& s = _states[NationToIndex(nation)];
-
-	// Escape single quotes for inline SQL. Other fields are integers so no
-	// injection surface beyond strKingName, which is already constrained to
-	// USERDATA character names (alphanumerics) by upstream callers.
-	std::string escapedName;
-	escapedName.reserve(s.strKingName.size() + 4);
-	for (char c : s.strKingName)
-	{
-		if (c == '\'')
-			escapedName += "''";
-		else
-			escapedName += c;
-	}
-
-	std::string sql = "UPDATE KING_SYSTEM SET byType = ";
-	sql += std::to_string(static_cast<int>(s.byType));
-	sql += ", strKingName = '";
-	sql += escapedName;
-	sql += "', byTerritoryTariff = ";
-	sql += std::to_string(static_cast<int>(s.byTerritoryTariff));
-	sql += ", nTerritoryTax = ";
-	sql += std::to_string(s.nTerritoryTax);
-	sql += ", nNationalTreasury = ";
-	sql += std::to_string(s.nNationalTreasury);
-	sql += " WHERE byNation = ";
-	sql += std::to_string(nation);
-
-	try
-	{
-		auto poolConn = db::ConnectionManager::CreatePoolConnection(modelUtil::DbType::GAME);
-		if (poolConn == nullptr)
-		{
-			spdlog::error("KingSystem::SaveNation: failed to obtain DB pool connection");
-			return;
-		}
-
-		nanodbc::statement stmt = poolConn->CreateStatement(sql);
-		nanodbc::execute(stmt);
-		spdlog::info("KingSystem::SaveNation: persisted nation={} byType={} king='{}'", nation,
-			s.byType, s.strKingName);
-	}
-	catch (const nanodbc::database_error& dbErr)
-	{
-		spdlog::error(
-			"KingSystem::SaveNation: nanodbc error for nation={}: {}", nation, dbErr.what());
-	}
-	catch (const std::exception& ex)
-	{
-		spdlog::error(
-			"KingSystem::SaveNation: unexpected error for nation={}: {}", nation, ex.what());
-	}
+	_repo.SaveNation(nation, _states[NationToIndex(nation)]);
 }
 
 void CKingSystem::Tick()

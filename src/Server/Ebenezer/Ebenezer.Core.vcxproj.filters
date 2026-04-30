@@ -9,6 +9,27 @@
       <UniqueIdentifier>{8beac61a-3ef0-4d31-b292-75217e274258}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
+    <Filter Include="shared">
+      <UniqueIdentifier>{a1b2c3d4-1111-2222-3333-444444444401}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shared\infrastructure">
+      <UniqueIdentifier>{a1b2c3d4-1111-2222-3333-444444444402}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shared\infrastructure\persistence">
+      <UniqueIdentifier>{a1b2c3d4-1111-2222-3333-444444444403}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555501}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\king-system">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555502}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\king-system\domain">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555503}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\king-system\persistence">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555504}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -79,6 +100,12 @@
     </ClCompile>
     <ClCompile Include="EbenezerLogger.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\infrastructure\persistence\SqlHelpers.cpp">
+      <Filter>shared\infrastructure\persistence</Filter>
+    </ClCompile>
+    <ClCompile Include="features\king-system\persistence\KingSystemRepository.cpp">
+      <Filter>features\king-system\persistence</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -168,6 +195,18 @@
     </ClInclude>
     <ClInclude Include="..\shared-server\_USER_DATA.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\infrastructure\persistence\SqlHelpers.h">
+      <Filter>shared\infrastructure\persistence</Filter>
+    </ClInclude>
+    <ClInclude Include="features\king-system\domain\KingConstants.h">
+      <Filter>features\king-system\domain</Filter>
+    </ClInclude>
+    <ClInclude Include="features\king-system\domain\KingNationState.h">
+      <Filter>features\king-system\domain</Filter>
+    </ClInclude>
+    <ClInclude Include="features\king-system\persistence\KingSystemRepository.h">
+      <Filter>features\king-system\persistence</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
