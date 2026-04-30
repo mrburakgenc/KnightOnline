@@ -782,6 +782,7 @@ enum e_AIOpcode : uint8_t
 	AG_NPC_INOUT           = 11,
 	AG_NPC_EVENT_ITEM      = 12,
 	AG_NPC_HP_REQ          = 13,
+	AG_NPC_SUMMON_REQ      = 14, // GM command: summon NPC at user position
 
 	// ---------------------------------------------------------------------
 	// AI Server와 게임서버간의 User, Npc 공통 관련된 패킷은 50번~100번

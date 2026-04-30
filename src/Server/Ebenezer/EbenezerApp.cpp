@@ -257,6 +257,7 @@ bool EbenezerApp::OnStart()
 	m_sSocketCount           = 0;
 	m_sErrorSocketCount      = 0;
 	m_KnightsManager.m_pMain = this;
+	m_KingSystem.m_pMain     = this;
 	// sungyong 2002.05.23
 	m_sSendSocket            = 0;
 	m_bFirstServerFlag       = false;
@@ -318,6 +319,13 @@ bool EbenezerApp::OnStart()
 	{
 		spdlog::error("EbenezerApp::OnStart: failed to cache ITEM table, closing");
 		return false;
+	}
+
+	spdlog::info("EbenezerApp::OnStart: hydrating KING_SYSTEM");
+	if (!m_KingSystem.LoadFromDb())
+	{
+		// Non-fatal — gameplay can proceed with default (no-king) state.
+		spdlog::warn("EbenezerApp::OnStart: KING_SYSTEM hydration failed; continuing with defaults");
 	}
 
 	spdlog::info("EbenezerApp::OnStart: loading ITEM_UPGRADE table");

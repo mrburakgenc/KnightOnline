@@ -12,6 +12,7 @@
 #include "Knights.h"
 #include "KnightsManager.h"
 #include "KnightsSiegeWar.h"
+#include "KingSystem.h"
 #include "EVENT.h"
 #include "UdpSocket.h"
 
@@ -276,6 +277,7 @@ public:
 
 	CKnightsManager m_KnightsManager;
 	CKnightsSiegeWar m_KnightsSiegeWar;
+	CKingSystem m_KingSystem;
 
 	int16_t m_sPartyIndex;
 	int16_t m_sZoneCount;   // AI Server 재접속시 사용

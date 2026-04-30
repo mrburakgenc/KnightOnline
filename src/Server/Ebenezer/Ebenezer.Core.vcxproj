@@ -163,6 +163,7 @@
     <ClCompile Include="EVENT_DATA.cpp" />
     <ClCompile Include="EXEC.cpp" />
     <ClCompile Include="GameEvent.cpp" />
+    <ClCompile Include="KingSystem.cpp" />
     <ClCompile Include="Knights.cpp" />
     <ClCompile Include="KnightsManager.cpp" />
     <ClCompile Include="KnightsSiegeWar.cpp" />
@@ -195,6 +196,7 @@
     <ClInclude Include="EXEC.h" />
     <ClInclude Include="GameDefine.h" />
     <ClInclude Include="GameEvent.h" />
+    <ClInclude Include="KingSystem.h" />
     <ClInclude Include="Knights.h" />
     <ClInclude Include="KnightsManager.h" />
     <ClInclude Include="KnightsSiegeWar.h" />

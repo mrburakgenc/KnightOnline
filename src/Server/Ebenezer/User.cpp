@@ -669,6 +669,10 @@ void CUser::Parsing(int len, char* pData)
 			m_pMain->m_KnightsManager.PacketProcess(this, pData + index);
 			break;
 
+		case WIZ_KING:
+			m_pMain->m_KingSystem.PacketProcess(this, pData + index);
+			break;
+
 		case WIZ_ITEM_REMOVE:
 			ItemRemove(pData + index);
 			break;
@@ -1993,6 +1997,11 @@ void CUser::SendMyInfo(int type)
 	if (m_pUserData->m_bKnights != 0)
 		pKnights = m_pMain->m_KnightsMap.GetData(m_pUserData->m_bKnights);
 
+	// Cape ID 99 in Cloak.tbl is the "king" cape — show it whenever this
+	// user is the reigning monarch, regardless of clan affiliation.
+	const bool isKing                = m_pMain->m_KingSystem.IsKing(this);
+	constexpr int16_t KING_CAPE_ID   = 99;
+
 	if (pKnights != nullptr)
 	{
 		SetShort(sendBuffer, pKnights->m_sAllianceKnights, sendIndex);
@@ -2001,7 +2010,7 @@ void CUser::SendMyInfo(int type)
 		SetByte(sendBuffer, pKnights->m_byGrade, sendIndex); // Knights grade
 		SetByte(sendBuffer, pKnights->m_byRanking, sendIndex);
 		SetShort(sendBuffer, pKnights->m_sMarkVersion, sendIndex);
-		SetShort(sendBuffer, pKnights->m_sCape, sendIndex);
+		SetShort(sendBuffer, isKing ? KING_CAPE_ID : pKnights->m_sCape, sendIndex);
 		//TRACE(_T("sendmyinfo knights index = %d, kname=%hs, name=%hs\n") , iLength, pKnights->strName, m_pUserData->m_id);
 	}
 	else
@@ -2012,7 +2021,7 @@ void CUser::SendMyInfo(int type)
 		SetByte(sendBuffer, 0, sendIndex);   // m_byGrade
 		SetByte(sendBuffer, 0, sendIndex);   // m_byRanking
 		SetShort(sendBuffer, 0, sendIndex);  // m_sMarkVerison
-		SetShort(sendBuffer, -1, sendIndex); // m_sCape
+		SetShort(sendBuffer, isKing ? KING_CAPE_ID : -1, sendIndex);
 	}
 
 	SetShort(sendBuffer, m_iMaxHp, sendIndex);
@@ -14398,6 +14407,11 @@ void CUser::GetUserInfo(char* buff, int& buff_index)
 	if (m_pUserData->m_bKnights != 0)
 		pKnights = m_pMain->m_KnightsMap.GetData(m_pUserData->m_bKnights);
 
+	// Override clan cape with the "king" cape (Cloak.tbl id 99) when this
+	// user is the reigning monarch, so other clients render the royal cape.
+	const bool isKing              = m_pMain->m_KingSystem.IsKing(this);
+	constexpr int16_t KING_CAPE_ID = 99;
+
 	if (pKnights != nullptr)
 	{
 		SetShort(buff, pKnights->m_sAllianceKnights, buff_index);
@@ -14405,7 +14419,7 @@ void CUser::GetUserInfo(char* buff, int& buff_index)
 		SetByte(buff, pKnights->m_byGrade, buff_index); // knights grade
 		SetByte(buff, pKnights->m_byRanking, buff_index);
 		SetShort(buff, pKnights->m_sMarkVersion, buff_index);
-		SetShort(buff, pKnights->m_sCape, buff_index);
+		SetShort(buff, isKing ? KING_CAPE_ID : pKnights->m_sCape, buff_index);
 	}
 	else
 	{
@@ -14414,7 +14428,7 @@ void CUser::GetUserInfo(char* buff, int& buff_index)
 		SetByte(buff, 0, buff_index);   // m_byGrade
 		SetByte(buff, 0, buff_index);   // m_byRanking
 		SetShort(buff, 0, buff_index);  // m_sMarkVerison
-		SetShort(buff, -1, buff_index); // m_sCape
+		SetShort(buff, isKing ? KING_CAPE_ID : -1, buff_index);
 	}
 
 	SetByte(buff, m_pUserData->m_bLevel, buff_index);

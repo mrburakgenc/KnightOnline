@@ -100,6 +100,16 @@ protected:
 #ifdef _DEBUG
 	// unoffical commands for debug builds/purposes only
 	void GiveItem();
+	void AddExp();
+	void SetKing();
+	void KingEvent();
+	void KingTax();
+	void KingStatus();
+	void KingPhase();
+	void KingNominate();
+	void KingVote();
+	void KingImpeach();
+	void KingImpeachVote();
 #endif
 
 	bool ParseCommand(const std::string_view command, size_t& key);

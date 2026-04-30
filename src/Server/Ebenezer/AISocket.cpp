@@ -1107,10 +1107,11 @@ void CAISocket::RecvUserHP(char* pBuf)
 
 void CAISocket::RecvUserExp(char* pBuf)
 {
-	int index        = 0;
-	int userId       = GetShort(pBuf, index);
-	int16_t sExp     = GetShort(pBuf, index);
-	int16_t sLoyalty = GetShort(pBuf, index);
+	int index    = 0;
+	int userId   = GetShort(pBuf, index);
+	// 32-bit fields. int16_t overflowed for high-level mobs (e.g. exp=-17797).
+	int sExp     = GetInt(pBuf, index);
+	int sLoyalty = GetInt(pBuf, index);
 
 	auto pUser       = _main->GetUserPtr(userId);
 	if (pUser == nullptr)
