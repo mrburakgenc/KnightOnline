@@ -46,6 +46,13 @@ struct KingNationState
 	bool                                  expEventActive        = false;
 	int                                   expEventBonusPercent  = 0;
 	std::chrono::system_clock::time_point expEventEnd;
+
+	// Phase-4 scheduler: when a phase is timed (nomination / voting auto-close,
+	// scheduled election kickoff), Tick() advances the state machine once
+	// system_clock::now() reaches this deadline.
+	bool                                  schedulerActive       = false;
+	std::chrono::system_clock::time_point phaseDeadline;
+	uint8_t                               nextPhaseOnDeadline   = KING_PHASE_NO_KING;
 };
 
 // CKingSystem owns the per-nation monarchy state for the running server.
@@ -133,6 +140,37 @@ public:
 	bool CastImpeachmentVote(std::string_view voterAccount, std::string_view voterChar, int nation,
 		bool agree, std::string& errorOut);
 
+	// ----- Scheduler (Phase 4) -----
+	// Schedules an automatic phase transition that Tick() will fire once the
+	// deadline is reached. Cancels the previous schedule for that nation if
+	// any. Use durationMinutes <= 0 to clear.
+	void ScheduleNextPhase(int nation, uint8_t nextPhase, int durationMinutes);
+
+	// Convenience helper that walks the full election cycle automatically:
+	//   now → nomination (auto-close after nominationMin)
+	//        → voting     (auto-close after votingMin → tally → king crowned)
+	void RunFullElection(int nation, int nominationMin, int votingMin);
+
+	// ----- Notice board (Phase 4) -----
+	// Stores or fetches the candidate manifesto text from
+	// KING_CANDIDACY_NOTICE_BOARD. Returns false on DB error.
+	bool WriteCandidateNotice(
+		int nation, std::string_view candidateName, std::string_view content);
+	bool ReadCandidateNotice(
+		int nation, std::string_view candidateName, std::string& contentOut);
+
+	// ----- Royal command actions (matches client UICmdList CMD_LIST_CAT_KING) -----
+	//   /RoyalOrder       — kingdom-wide announcement
+	//   /Reward           — pay gold from the treasury to a target
+	//   /Rain / /Snow     — change weather across the realm
+	//   /Clear            — clear weather
+	//   /ExperiencePoint  — exp event (already covered by KING_EVENT_EXP)
+	//   /DropRate         — gold drop event (already covered by KING_EVENT_NOAH)
+	// /Prize is intentionally NOT supported — kings don't hand out items.
+	void RoyalOrder(int nation, std::string_view kingName, std::string_view message);
+	bool RoyalReward(int nation, std::string_view recipient, int gold);
+	void RoyalWeather(uint8_t weatherKind);   // 1=fine, 2=rain, 3=snow
+
 	// Sends an ANNOUNCEMENT_CHAT line to every user in `nation` (1 or 2),
 	// or to everyone if nation == 0.
 	void BroadcastNationAnnouncement(int nation, std::string_view message);
@@ -154,6 +192,10 @@ private:
 	int  NationToIndex(int nation) const { return nation - 1; }
 
 	KingNationState _states[KING_NATION_COUNT] {};
+
+	// Voting duration to use when the scheduler advances from nomination →
+	// voting. Set by RunFullElection. Falls back to 30 min if zero.
+	int _pendingVotingMinutes[KING_NATION_COUNT] { 30, 30 };
 };
 
 } // namespace Ebenezer

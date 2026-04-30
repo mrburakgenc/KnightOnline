@@ -464,10 +464,43 @@ bool OperationMessage::Process(const std::string_view command)
 				KingImpeachVote();
 				break;
 
+			// +king_schedule <nation> <byType> <minutes>      arm Tick to fire
+			case "+king_schedule"_djb2:
+				KingSchedule();
+				break;
+
+			// +king_notice <write|read> <name> <text...>
+			case "+king_notice"_djb2:
+				KingNotice();
+				break;
+
+			// +king_autocycle <nation> <nominationMin> <votingMin>
+			case "+king_autocycle"_djb2:
+				KingAutoCycle();
+				break;
+
+			// +king_order <message...>
+			case "+king_order"_djb2:
+			case "+royalorder"_djb2:
+				KingOrder();
+				break;
+
+			// +king_reward <recipient> <gold>
+			case "+king_reward"_djb2:
+				KingReward();
+				break;
+
+			// +king_weather <clear|rain|snow>
+			case "+king_weather"_djb2:
+				KingWeather();
+				break;
+
 #endif
 
 			// Unhandled command.
 			default:
+				spdlog::warn("OperationMessage::Process: UNHANDLED command='{}' key={}",
+					_command, key);
 				return false;
 		}
 	}
@@ -1171,6 +1204,73 @@ void OperationMessage::KingImpeachVote()
 		agree, ok, error);
 }
 
+// +king_schedule <nation> <byType> <minutes>
+//   Arms the Phase-4 scheduler to advance the given nation to <byType> in
+//   <minutes>. Useful for previewing auto-transition without typing them
+//   one-by-one. Pass minutes=0 to clear a queued transition.
+void OperationMessage::KingSchedule()
+{
+	if (_srcUser == nullptr || GetArgCount() < 3)
+		return;
+	const int     nation     = ParseInt(0);
+	const int     byTypeRaw  = ParseInt(1);
+	const int     minutes    = ParseInt(2);
+	const uint8_t targetType = static_cast<uint8_t>(std::clamp(byTypeRaw, 0, 7));
+	_main->m_KingSystem.ScheduleNextPhase(nation, targetType, minutes);
+}
+
+// +king_notice <write|read> <candidateName> [text...]
+//   write — store the calling user's candidate manifesto (free-form remainder
+//           of the line is the body)
+//   read  — print whatever's stored for <candidateName> to the server log
+void OperationMessage::KingNotice()
+{
+	if (_srcUser == nullptr || GetArgCount() < 2)
+		return;
+	const int          nation = _srcUser->m_pUserData->m_bNation;
+	const std::string& mode   = ParseString(0);
+
+	if (mode == "write")
+	{
+		std::string body;
+		for (size_t i = 1; i < GetArgCount(); ++i)
+		{
+			if (i > 1)
+				body += ' ';
+			body += ParseString(i);
+		}
+		const bool ok = _main->m_KingSystem.WriteCandidateNotice(
+			nation, _srcUser->m_pUserData->m_id, body);
+		spdlog::info("OperationMessage::KingNotice: write nation={} ok={} body='{}'", nation, ok,
+			body);
+	}
+	else if (mode == "read")
+	{
+		const std::string& target = ParseString(1);
+		std::string        body;
+		const bool ok = _main->m_KingSystem.ReadCandidateNotice(nation, target, body);
+		spdlog::info("OperationMessage::KingNotice: read nation={} target='{}' ok={} body='{}'",
+			nation, target, ok, body);
+	}
+	else
+	{
+		spdlog::warn("OperationMessage::KingNotice: unknown mode '{}'", mode);
+	}
+}
+
+// +king_autocycle <nation> <nominationMin> <votingMin>
+//   One-shot: starts nomination immediately, auto-advances to voting after
+//   <nominationMin>, auto-tallies after <votingMin> more minutes.
+void OperationMessage::KingAutoCycle()
+{
+	if (_srcUser == nullptr || GetArgCount() < 3)
+		return;
+	const int nation        = ParseInt(0);
+	const int nominationMin = ParseInt(1);
+	const int votingMin     = ParseInt(2);
+	_main->m_KingSystem.RunFullElection(nation, nominationMin, votingMin);
+}
+
 // +king_status     dump current monarchy state to the server log AND echo
 // a one-line summary back to the calling GM as a chat notice so it's visible
 // in-game without having to tail the log file.
@@ -1206,6 +1306,67 @@ void OperationMessage::KingStatus()
 			_srcUser->Send(buffer, idx);
 		}
 	}
+}
+
+// +king_order <message...>   (alias: +royalorder)
+//   Broadcasts a kingdom-wide announcement signed by the calling king.
+//   Mirrors the client UICmdList CMD_ROYALORDER menu entry.
+void OperationMessage::KingOrder()
+{
+	if (_srcUser == nullptr || GetArgCount() < 1)
+		return;
+
+	std::string body;
+	for (size_t i = 0; i < GetArgCount(); ++i)
+	{
+		if (i > 0)
+			body += ' ';
+		body += ParseString(i);
+	}
+
+	const int nation = _srcUser->m_pUserData->m_bNation;
+	_main->m_KingSystem.RoyalOrder(nation, _srcUser->m_pUserData->m_id, body);
+}
+
+// +king_reward <recipient> <gold>
+//   Awards gold from the national treasury to the recipient. Mirrors
+//   client CMD_REWARD.
+void OperationMessage::KingReward()
+{
+	if (_srcUser == nullptr || GetArgCount() < 2)
+		return;
+
+	const std::string& recipient = ParseString(0);
+	const int          gold      = ParseInt(1);
+	const int          nation    = _srcUser->m_pUserData->m_bNation;
+
+	const bool ok = _main->m_KingSystem.RoyalReward(nation, recipient, gold);
+	spdlog::info("OperationMessage::KingReward: nation={} recipient='{}' gold={} ok={}", nation,
+		recipient, gold, ok);
+}
+
+// +king_weather <clear|fine|rain|snow>
+//   Sets realm-wide weather. Mirrors client CMD_RAIN / CMD_SNOW / CMD_CLEAR.
+void OperationMessage::KingWeather()
+{
+	if (_srcUser == nullptr || GetArgCount() < 1)
+		return;
+
+	const std::string& kind = ParseString(0);
+	uint8_t            weatherKind = 0;
+	if (kind == "clear" || kind == "fine")
+		weatherKind = 1;
+	else if (kind == "rain")
+		weatherKind = 2;
+	else if (kind == "snow")
+		weatherKind = 3;
+	else
+	{
+		spdlog::warn("OperationMessage::KingWeather: unknown kind '{}' (use clear|rain|snow)", kind);
+		return;
+	}
+
+	_main->m_KingSystem.RoyalWeather(weatherKind);
 }
 #endif
 

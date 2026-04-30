@@ -3515,6 +3515,10 @@ void EbenezerApp::GameTimeTick()
 {
 	UpdateGameTime();
 
+	// Phase-4 scheduler: expires NOAH/EXP events and fires queued election
+	// phase transitions when their deadlines are reached.
+	m_KingSystem.Tick();
+
 	// AIServer Socket Alive Check Routine
 	if (m_bFirstServerFlag)
 	{
