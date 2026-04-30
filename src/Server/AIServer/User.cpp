@@ -450,8 +450,10 @@ void CUser::SendExp(int iExp, int iLoyalty, int /*tType*/)
 
 	SetByte(buff, AG_USER_EXP, sendIndex);
 	SetShort(buff, m_iUserId, sendIndex);
-	SetShort(buff, iExp, sendIndex);
-	SetShort(buff, iLoyalty, sendIndex);
+	// Use 32-bit fields: int16_t overflowed for high-level monsters and Ebenezer
+	// would reject the packet ("invalid exp or loyalty amount granted").
+	SetInt(buff, iExp, sendIndex);
+	SetInt(buff, iLoyalty, sendIndex);
 
 	//TRACE(_T("$$ User - SendExp : %hs, exp=%d, loyalty=%d $$\n"), m_strUserID, iExp, iLoyalty);
 

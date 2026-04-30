@@ -257,6 +257,7 @@ bool EbenezerApp::OnStart()
 	m_sSocketCount           = 0;
 	m_sErrorSocketCount      = 0;
 	m_KnightsManager.m_pMain = this;
+	m_KingSystem.m_pMain     = this;
 	// sungyong 2002.05.23
 	m_sSendSocket            = 0;
 	m_bFirstServerFlag       = false;

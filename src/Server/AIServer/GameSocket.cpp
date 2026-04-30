@@ -231,6 +231,10 @@ void CGameSocket::Parsing(int /*length*/, char* pData)
 			RecvGateOpen(pData + index);
 			break;
 
+		case AG_NPC_SUMMON_REQ:
+			RecvNpcSummon(pData + index);
+			break;
+
 		default:
 			spdlog::error("GameSocket::Parsing: Unhandled opcode {:02X}", bType);
 			break;
@@ -1202,6 +1206,136 @@ void CGameSocket::RecvBattleEvent(char* pBuf)
 			else if (nEvent == BATTLEZONE_CLOSE)
 				pNpc->ChangeAbility(BATTLEZONE_CLOSE);
 		}
+	}
+}
+
+// Unofficial GM command handler: spawn an NPC at the requested position.
+// Note: this MVP does not attach the NPC to a CNpcThread (the thread arrays
+// are sized at startup), so combat AI ticks may not run for summoned NPCs.
+// The NPC will be visible to clients and registered with _npcMap.
+void CGameSocket::RecvNpcSummon(char* pBuf)
+{
+	int index = 0;
+
+	int16_t npcId = GetShort(pBuf, index);
+	int16_t count = GetShort(pBuf, index);
+	uint8_t zone  = GetByte(pBuf, index);
+	float   posX  = GetFloat(pBuf, index);
+	float   posZ  = GetFloat(pBuf, index);
+
+	if (npcId <= 0 || count <= 0 || count > 50)
+	{
+		spdlog::warn("GameSocket::RecvNpcSummon: invalid args [npcId={} count={}]", npcId, count);
+		return;
+	}
+
+	// Look up NPC table entry. Try monster table first, then NPC table.
+	model::Npc* pNpcTable = m_pMain->_monTableMap.GetData(npcId);
+	uint8_t actType       = 0;
+	if (pNpcTable == nullptr)
+	{
+		pNpcTable = m_pMain->_npcTableMap.GetData(npcId);
+		actType   = 100; // NPC range, not monster
+	}
+	if (pNpcTable == nullptr)
+	{
+		spdlog::warn("GameSocket::RecvNpcSummon: unknown npcId={}", npcId);
+		return;
+	}
+
+	// Resolve target zone. The summon must be processed by the AI server instance
+	// hosting that zone — silently ignore otherwise.
+	int zoneIndex = m_pMain->GetZoneIndex(zone);
+	if (zoneIndex < 0)
+	{
+		spdlog::warn("GameSocket::RecvNpcSummon: zone={} not hosted on this AI server", zone);
+		return;
+	}
+
+	for (int16_t i = 0; i < count; ++i)
+	{
+		CNpc* pNpc             = new CNpc();
+
+		// Allocate a serial in [20000, 22000). Wire id (m_sNid + NPC_BAND=10000) must
+		// fit in a positive int16_t (<= 32767), so the safe upper bound for m_sNid is
+		// 22767. Using 20000+ keeps us clear of statically loaded NPC serials.
+		static constexpr int kSummonSerialBase  = 20000;
+		static constexpr int kSummonSerialRange = 2000;
+		pNpc->m_sNid           = static_cast<int16_t>(
+            kSummonSerialBase + (m_pMain->_totalNpcCount++ % kSummonSerialRange));
+		pNpc->m_sSid           = npcId;
+
+		pNpc->m_byMoveType     = (actType >= 100) ? static_cast<uint8_t>(actType - 100) : 0;
+		pNpc->m_byInitMoveType = (actType >= 100) ? actType : 0;
+		pNpc->m_byDirection    = 0;
+		pNpc->m_byBattlePos    = 0;
+
+		pNpc->InitPos();
+		pNpc->Load(pNpcTable, true);
+
+		pNpc->m_sCurZone       = zone;
+		pNpc->m_ZoneIndex      = static_cast<int16_t>(zoneIndex);
+
+		// Spread spawns slightly so they don't fully overlap visually.
+		const float jitterX    = static_cast<float>((i % 5) - 2);
+		const float jitterZ    = static_cast<float>((i / 5) % 5 - 2);
+		pNpc->m_fCurX          = posX + jitterX;
+		pNpc->m_fCurY          = 0.0f;
+		pNpc->m_fCurZ          = posZ + jitterZ;
+
+		// Allow the NPC to wander a small area around the spawn point.
+		const int boxSize      = 8;
+		pNpc->m_nInitMinX = pNpc->m_nLimitMinX = static_cast<int>(posX) - boxSize;
+		pNpc->m_nInitMinY = pNpc->m_nLimitMinZ = static_cast<int>(posZ) - boxSize;
+		pNpc->m_nInitMaxX = pNpc->m_nLimitMaxX = static_cast<int>(posX) + boxSize;
+		pNpc->m_nInitMaxY = pNpc->m_nLimitMaxZ = static_cast<int>(posZ) + boxSize;
+
+		pNpc->m_sRegenTime    = 60 * 1000; // do not aggressively respawn summoned NPCs
+		pNpc->m_sMaxPathCount = 0;
+		pNpc->m_byObjectType  = NORMAL_OBJECT;
+		pNpc->m_byDungeonFamily = 0;
+		pNpc->m_bySpecialType = 0;
+		pNpc->m_byRegenType   = 0;
+		pNpc->m_byTrapNumber  = 0;
+		pNpc->m_bFirstLive    = 1;
+
+		if (!m_pMain->_npcMap.PutData(pNpc->m_sNid, pNpc))
+		{
+			spdlog::warn(
+				"GameSocket::RecvNpcSummon: PutData failed [serial={} npcId={}]",
+				pNpc->m_sNid, npcId);
+			delete pNpc;
+			continue;
+		}
+
+		pNpc->Init();
+
+		// 1) Send NPC_INFO_ALL (count=1) so Ebenezer creates the CNpc record in its
+		//    m_NpcMap and registers it in the region grid. AG_NPC_INFO would be
+		//    rejected here because Ebenezer's RecvNpcInfo expects the entry to
+		//    already exist.
+		{
+			char registerBuf[1024] {};
+			int  registerIndex = 0;
+			SetByte(registerBuf, NPC_INFO_ALL, registerIndex);
+			SetByte(registerBuf, 1, registerIndex); // byCount
+			pNpc->SendNpcInfoAll(registerBuf, registerIndex, 0);
+			Send(registerBuf, registerIndex);
+		}
+
+		// 2) Send AG_NPC_INFO so Ebenezer broadcasts WIZ_NPC_INOUT/NPC_IN to all
+		//    clients in the region, making the NPC immediately visible.
+		{
+			char broadcastBuf[1024] {};
+			int  broadcastIndex = 0;
+			pNpc->FillNpcInfo(broadcastBuf, broadcastIndex, 0);
+			Send(broadcastBuf, broadcastIndex);
+		}
+
+		spdlog::info(
+			"GameSocket::RecvNpcSummon: spawned [serial={} wireId={} npcId={} zone={} "
+			"x={:.1f} z={:.1f}]",
+			pNpc->m_sNid, pNpc->m_sNid + NPC_BAND, npcId, zone, pNpc->m_fCurX, pNpc->m_fCurZ);
 	}
 }
 

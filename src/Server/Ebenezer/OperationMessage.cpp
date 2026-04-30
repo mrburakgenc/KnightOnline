@@ -9,6 +9,8 @@
 #include <shared/StringUtils.h>
 #include <spdlog/spdlog.h>
 
+#include <algorithm>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 
@@ -53,10 +55,6 @@ bool OperationMessage::Process(const std::string_view command)
 				Assault();
 				break;
 
-			case "+monsummon"_djb2:
-				MonSummon();
-				break;
-
 			case "+monsummonall"_djb2:
 				MonSummonAll();
 				break;
@@ -73,6 +71,12 @@ bool OperationMessage::Process(const std::string_view command)
 				MonKill();
 				break;
 #endif
+
+			// Unofficial GM command: summon a monster/NPC at the caller's position.
+			// Usage: +monsummon <npcId> [count]
+			case "+monsummon"_djb2:
+				MonSummon();
+				break;
 
 			case "/open"_djb2:
 			case "+open"_djb2:
@@ -408,6 +412,33 @@ bool OperationMessage::Process(const std::string_view command)
 				GiveItem();
 				break;
 
+			// +add_exp <amount>   amount may be negative (caps at level threshold).
+			case "+add_exp"_djb2:
+			case "+add_xp"_djb2:
+				AddExp();
+				break;
+
+			// +set_king <nation> <name>     install/replace the king of a nation
+			// +set_king clear <nation>      remove the king
+			case "+set_king"_djb2:
+				SetKing();
+				break;
+
+			// +king_event <noah|exp> <bonus%> <minutes>   fire a nation event
+			case "+king_event"_djb2:
+				KingEvent();
+				break;
+
+			// +king_tax <nation> <tariff%> [territoryTax]
+			case "+king_tax"_djb2:
+				KingTax();
+				break;
+
+			// +king_status                  prints both nations' state to log
+			case "+king_status"_djb2:
+				KingStatus();
+				break;
+
 #endif
 
 			// Unhandled command.
@@ -475,9 +506,44 @@ void OperationMessage::Assault()
 	// TODO
 }
 
+// Unofficial GM command: spawn a monster/NPC at the caller's current position.
+// Sends AG_NPC_SUMMON_REQ to the AI server which performs the actual spawn.
+//
+// Usage: +monsummon <npcId> [count]
 void OperationMessage::MonSummon()
 {
-	// TODO
+	if (_srcUser == nullptr || GetArgCount() < 1)
+		return;
+
+	int npcId = ParseInt(0);
+	int count = 1;
+	if (GetArgCount() >= 2)
+		count = ParseInt(1);
+
+	if (npcId <= 0 || npcId > std::numeric_limits<int16_t>::max())
+		return;
+
+	if (count <= 0 || count > 50)
+		count = 1;
+
+	const uint8_t zone = _srcUser->m_pUserData->m_bZone;
+	const float   posX = _srcUser->m_pUserData->m_curx;
+	const float   posZ = _srcUser->m_pUserData->m_curz;
+
+	char sendBuffer[32] {};
+	int sendIndex = 0;
+	SetByte(sendBuffer, AG_NPC_SUMMON_REQ, sendIndex);
+	SetShort(sendBuffer, static_cast<int16_t>(npcId), sendIndex);
+	SetShort(sendBuffer, static_cast<int16_t>(count), sendIndex);
+	SetByte(sendBuffer, zone, sendIndex);
+	SetFloat(sendBuffer, posX, sendIndex);
+	SetFloat(sendBuffer, posZ, sendIndex);
+
+	_main->Send_AIServer(zone, sendBuffer, sendIndex);
+
+	spdlog::info("OperationMessage::MonSummon: requested [user={} npcId={} count={} zone={} "
+				 "x={:.1f} z={:.1f}]",
+		_srcUser->m_pUserData->m_id, npcId, count, zone, posX, posZ);
 }
 
 void OperationMessage::MonSummonAll()
@@ -913,6 +979,96 @@ void OperationMessage::GiveItem()
 	spdlog::warn("OperationMessage::GiveItem: invoked [srcUser={} authority={} itemId={} "
 				 "count={} success={}]",
 		_srcUser->m_pUserData->m_id, _srcUser->m_pUserData->m_bAuthority, itemId, count, isSuccess);
+}
+
+// +add_exp <amount>
+// Grants (or removes, if negative) experience to the caller. Routes through
+// CUser::ExpChange which handles level-up / level-down and client notification.
+void OperationMessage::AddExp()
+{
+	if (_srcUser == nullptr || GetArgCount() < 1)
+		return;
+
+	const int amount = ParseInt(0);
+	if (amount == 0)
+		return;
+
+	_srcUser->ExpChange(amount);
+
+	spdlog::warn(
+		"OperationMessage::AddExp: invoked [srcUser={} authority={} amount={} newExp={} level={}]",
+		_srcUser->m_pUserData->m_id, _srcUser->m_pUserData->m_bAuthority, amount,
+		_srcUser->m_pUserData->m_iExp, _srcUser->m_pUserData->m_bLevel);
+}
+
+// +set_king <nation> <name>      install/replace the king of a nation
+// +set_king clear <nation>       remove the king
+void OperationMessage::SetKing()
+{
+	if (_srcUser == nullptr || GetArgCount() < 2)
+		return;
+
+	const std::string& first = ParseString(0);
+	if (first == "clear")
+	{
+		const int nation = ParseInt(1);
+		_main->m_KingSystem.ClearKing(nation);
+		return;
+	}
+
+	const int nation = ParseInt(0);
+	const std::string& name = ParseString(1);
+	if (name.empty())
+		return;
+	_main->m_KingSystem.SetKing(nation, name);
+}
+
+// +king_event <noah|exp> <bonus%> <minutes>
+void OperationMessage::KingEvent()
+{
+	if (_srcUser == nullptr || GetArgCount() < 3)
+		return;
+
+	const std::string& kind     = ParseString(0);
+	const int          bonus    = ParseInt(1);
+	const int          minutes  = ParseInt(2);
+	const int          nation   = _srcUser->m_pUserData->m_bNation;
+
+	if (kind == "noah" || kind == "gold")
+		_main->m_KingSystem.StartNoahEvent(nation, bonus, minutes);
+	else if (kind == "exp" || kind == "xp")
+		_main->m_KingSystem.StartExpEvent(nation, bonus, minutes);
+	else
+		spdlog::warn("OperationMessage::KingEvent: unknown event kind '{}'", kind);
+}
+
+// +king_tax <nation> <tariff%> [territoryTax]
+void OperationMessage::KingTax()
+{
+	if (_srcUser == nullptr || GetArgCount() < 2)
+		return;
+
+	const int     nation       = ParseInt(0);
+	const int     tariff       = ParseInt(1);
+	const int     territoryTax = (GetArgCount() >= 3)
+									? ParseInt(2)
+									: _main->m_KingSystem.GetState(nation).nTerritoryTax;
+	_main->m_KingSystem.SetTax(
+		nation, static_cast<uint8_t>(std::clamp(tariff, 0, 100)), territoryTax);
+}
+
+// +king_status     dump current monarchy state to the server log
+void OperationMessage::KingStatus()
+{
+	for (int n = KING_NATION_KARUS; n <= KING_NATION_ELMORAD; ++n)
+	{
+		const auto& s = _main->m_KingSystem.GetState(n);
+		spdlog::info(
+			"KingSystem[nation={}]: byType={} king='{}' tariff={} territoryTax={} treasury={} "
+			"noahEvent={} (+{}%) expEvent={} (+{}%)",
+			n, s.byType, s.strKingName, s.byTerritoryTariff, s.nTerritoryTax, s.nNationalTreasury,
+			s.noahEventActive, s.noahEventBonusPercent, s.expEventActive, s.expEventBonusPercent);
+	}
 }
 #endif
 
