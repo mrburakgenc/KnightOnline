@@ -656,6 +656,111 @@ bool CKingSystem::CastBallot(std::string_view voterAccount, std::string_view vot
 }
 
 // ---------------------------------------------------------------------------
+// Royal commands (Phase 4) — implements the client's CMD_LIST_CAT_KING menu
+// ---------------------------------------------------------------------------
+
+void CKingSystem::RoyalOrder(int nation, std::string_view kingName, std::string_view message)
+{
+	if (!IsValidNation(nation) || message.empty())
+		return;
+	std::string line = "[Royal Order] ";
+	if (!kingName.empty())
+	{
+		line += kingName;
+		line += ": ";
+	}
+	line += message;
+	BroadcastNationAnnouncement(nation, line);
+	spdlog::info("KingSystem::RoyalOrder: nation={} king='{}' msg='{}'", nation,
+		std::string(kingName), std::string(message));
+}
+
+bool CKingSystem::RoyalPrize(int nation, std::string_view recipient, int itemId, int count)
+{
+	if (!IsValidNation(nation) || m_pMain == nullptr)
+		return false;
+	if (count <= 0)
+		count = 1;
+
+	auto pUser = m_pMain->GetUserPtr(std::string(recipient).c_str(), NameType::Character);
+	if (pUser == nullptr || pUser->m_pUserData == nullptr)
+	{
+		spdlog::warn("KingSystem::RoyalPrize: recipient '{}' not online", std::string(recipient));
+		return false;
+	}
+	if (pUser->m_pUserData->m_bNation != nation)
+	{
+		spdlog::warn("KingSystem::RoyalPrize: nation mismatch for '{}'", std::string(recipient));
+		return false;
+	}
+
+	const bool gave = pUser->GiveItem(itemId, static_cast<int16_t>(count));
+	spdlog::info("KingSystem::RoyalPrize: recipient='{}' itemId={} count={} ok={}",
+		std::string(recipient), itemId, count, gave);
+	if (gave)
+	{
+		std::string msg = "[Royal Prize] ";
+		msg += recipient;
+		msg += " has been gifted by the King!";
+		BroadcastNationAnnouncement(nation, msg);
+	}
+	return gave;
+}
+
+bool CKingSystem::RoyalReward(int nation, std::string_view recipient, int gold)
+{
+	if (!IsValidNation(nation) || m_pMain == nullptr || gold == 0)
+		return false;
+
+	auto pUser = m_pMain->GetUserPtr(std::string(recipient).c_str(), NameType::Character);
+	if (pUser == nullptr || pUser->m_pUserData == nullptr)
+	{
+		spdlog::warn("KingSystem::RoyalReward: recipient '{}' not online", std::string(recipient));
+		return false;
+	}
+	if (pUser->m_pUserData->m_bNation != nation)
+		return false;
+
+	// Bound at MAX_GOLD (signed int32 ceiling, 21 oku per the data type doc).
+	const int newGold = std::min<int64_t>(
+		std::max<int64_t>(0, static_cast<int64_t>(pUser->m_pUserData->m_iGold) + gold),
+		std::numeric_limits<int32_t>::max());
+	pUser->m_pUserData->m_iGold = static_cast<int32_t>(newGold);
+
+	std::string msg = "[Royal Reward] ";
+	msg += recipient;
+	msg += " has received ";
+	msg += std::to_string(gold);
+	msg += " gold from the King!";
+	BroadcastNationAnnouncement(nation, msg);
+
+	spdlog::info("KingSystem::RoyalReward: recipient='{}' gold={} newBalance={}",
+		std::string(recipient), gold, pUser->m_pUserData->m_iGold);
+	return true;
+}
+
+void CKingSystem::RoyalWeather(uint8_t weatherKind)
+{
+	if (m_pMain == nullptr)
+		return;
+	if (weatherKind != WEATHER_FINE && weatherKind != WEATHER_RAIN && weatherKind != WEATHER_SNOW)
+	{
+		spdlog::warn("KingSystem::RoyalWeather: invalid weather={}", weatherKind);
+		return;
+	}
+
+	char sendBuffer[16] {};
+	int  sendIndex = 0;
+	SetByte(sendBuffer, WIZ_WEATHER, sendIndex);
+	SetByte(sendBuffer, weatherKind, sendIndex);
+	// Amount: light atmosphere for fine, full intensity otherwise.
+	const int16_t amount = (weatherKind == WEATHER_FINE) ? 0 : 50;
+	SetShort(sendBuffer, amount, sendIndex);
+	m_pMain->Send_All(sendBuffer, sendIndex);
+	spdlog::info("KingSystem::RoyalWeather: kind={} amount={}", weatherKind, amount);
+}
+
+// ---------------------------------------------------------------------------
 // Notice board (Phase 4)
 // ---------------------------------------------------------------------------
 
@@ -1435,11 +1540,41 @@ void CKingSystem::HandleEvent(CUser* pUser, char* pBuf)
 			break;
 		}
 		case KING_EVENT_PRIZE:
-		case KING_EVENT_FUGITIVE:
-		case KING_EVENT_WEATHER:
+		{
+			// Payload (best-effort): 1-byte name length + name + DWORD itemId
+			//                        + WORD count.
+			char    target[64] {};
+			int     nameLen = GetByte(pBuf, index);
+			if (nameLen <= 0 || nameLen > 21)
+				return;
+			memcpy(target, pBuf + index, nameLen);
+			target[nameLen] = '\0';
+			index += nameLen;
+			const int     itemId = GetDWORD(pBuf, index);
+			const int16_t count  = GetShort(pBuf, index);
+			RoyalPrize(nation, target, itemId, count);
+			break;
+		}
 		case KING_EVENT_NOTICE:
-			// Phase 1: not implemented.
-			spdlog::info("KingSystem::HandleEvent: kind {} deferred", kind);
+		{
+			// Payload: 2-byte length + UTF-8 message body. The king's
+			// announcement gets prefixed with [Royal Order] and broadcast.
+			const int16_t bodyLen = GetShort(pBuf, index);
+			if (bodyLen <= 0 || bodyLen > 200)
+				return;
+			std::string body(pBuf + index, bodyLen);
+			RoyalOrder(nation, pUser->m_pUserData->m_id, body);
+			break;
+		}
+		case KING_EVENT_WEATHER:
+		{
+			const uint8_t weatherKind = GetByte(pBuf, index);
+			RoyalWeather(weatherKind);
+			break;
+		}
+		case KING_EVENT_FUGITIVE:
+			// Reserved for the wanted-list feature; stub for now.
+			spdlog::info("KingSystem::HandleEvent: KING_EVENT_FUGITIVE deferred");
 			break;
 		default:
 			spdlog::warn("KingSystem::HandleEvent: unknown kind={}", kind);

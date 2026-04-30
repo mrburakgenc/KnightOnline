@@ -479,6 +479,27 @@ bool OperationMessage::Process(const std::string_view command)
 				KingAutoCycle();
 				break;
 
+			// +king_order <message...>
+			case "+king_order"_djb2:
+			case "+royalorder"_djb2:
+				KingOrder();
+				break;
+
+			// +king_prize <recipient> <itemId> [count]
+			case "+king_prize"_djb2:
+				KingPrize();
+				break;
+
+			// +king_reward <recipient> <gold>
+			case "+king_reward"_djb2:
+				KingReward();
+				break;
+
+			// +king_weather <clear|rain|snow>
+			case "+king_weather"_djb2:
+				KingWeather();
+				break;
+
 #endif
 
 			// Unhandled command.
@@ -1288,6 +1309,85 @@ void OperationMessage::KingStatus()
 			_srcUser->Send(buffer, idx);
 		}
 	}
+}
+
+// +king_order <message...>   (alias: +royalorder)
+//   Broadcasts a kingdom-wide announcement signed by the calling king.
+//   Mirrors the client UICmdList CMD_ROYALORDER menu entry.
+void OperationMessage::KingOrder()
+{
+	if (_srcUser == nullptr || GetArgCount() < 1)
+		return;
+
+	std::string body;
+	for (size_t i = 0; i < GetArgCount(); ++i)
+	{
+		if (i > 0)
+			body += ' ';
+		body += ParseString(i);
+	}
+
+	const int nation = _srcUser->m_pUserData->m_bNation;
+	_main->m_KingSystem.RoyalOrder(nation, _srcUser->m_pUserData->m_id, body);
+}
+
+// +king_prize <recipient> <itemId> [count]
+//   Drops the given item count into the recipient's inventory. Mirrors
+//   client CMD_PRIZE.
+void OperationMessage::KingPrize()
+{
+	if (_srcUser == nullptr || GetArgCount() < 2)
+		return;
+
+	const std::string& recipient = ParseString(0);
+	const int          itemId    = ParseInt(1);
+	const int          count     = (GetArgCount() >= 3) ? ParseInt(2) : 1;
+	const int          nation    = _srcUser->m_pUserData->m_bNation;
+
+	const bool ok = _main->m_KingSystem.RoyalPrize(nation, recipient, itemId, count);
+	spdlog::info("OperationMessage::KingPrize: nation={} recipient='{}' itemId={} count={} ok={}",
+		nation, recipient, itemId, count, ok);
+}
+
+// +king_reward <recipient> <gold>
+//   Awards gold from the national treasury to the recipient. Mirrors
+//   client CMD_REWARD.
+void OperationMessage::KingReward()
+{
+	if (_srcUser == nullptr || GetArgCount() < 2)
+		return;
+
+	const std::string& recipient = ParseString(0);
+	const int          gold      = ParseInt(1);
+	const int          nation    = _srcUser->m_pUserData->m_bNation;
+
+	const bool ok = _main->m_KingSystem.RoyalReward(nation, recipient, gold);
+	spdlog::info("OperationMessage::KingReward: nation={} recipient='{}' gold={} ok={}", nation,
+		recipient, gold, ok);
+}
+
+// +king_weather <clear|fine|rain|snow>
+//   Sets realm-wide weather. Mirrors client CMD_RAIN / CMD_SNOW / CMD_CLEAR.
+void OperationMessage::KingWeather()
+{
+	if (_srcUser == nullptr || GetArgCount() < 1)
+		return;
+
+	const std::string& kind = ParseString(0);
+	uint8_t            weatherKind = 0;
+	if (kind == "clear" || kind == "fine")
+		weatherKind = 1;
+	else if (kind == "rain")
+		weatherKind = 2;
+	else if (kind == "snow")
+		weatherKind = 3;
+	else
+	{
+		spdlog::warn("OperationMessage::KingWeather: unknown kind '{}' (use clear|rain|snow)", kind);
+		return;
+	}
+
+	_main->m_KingSystem.RoyalWeather(weatherKind);
 }
 #endif
 

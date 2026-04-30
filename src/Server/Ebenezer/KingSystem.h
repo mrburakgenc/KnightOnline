@@ -159,6 +159,18 @@ public:
 	bool ReadCandidateNotice(
 		int nation, std::string_view candidateName, std::string& contentOut);
 
+	// ----- Royal command actions (matches client UICmdList CMD_LIST_CAT_KING) -----
+	//   /RoyalOrder       — kingdom-wide announcement
+	//   /Prize / /Reward  — give an item/gold to a target
+	//   /Rain / /Snow     — change weather across the realm
+	//   /Clear            — clear weather
+	//   /ExperiencePoint  — exp event (already covered by KING_EVENT_EXP)
+	//   /DropRate         — gold drop event (already covered by KING_EVENT_NOAH)
+	void RoyalOrder(int nation, std::string_view kingName, std::string_view message);
+	bool RoyalPrize(int nation, std::string_view recipient, int itemId, int count);
+	bool RoyalReward(int nation, std::string_view recipient, int gold);
+	void RoyalWeather(uint8_t weatherKind);   // 1=fine, 2=rain, 3=snow
+
 	// Sends an ANNOUNCEMENT_CHAT line to every user in `nation` (1 or 2),
 	// or to everyone if nation == 0.
 	void BroadcastNationAnnouncement(int nation, std::string_view message);

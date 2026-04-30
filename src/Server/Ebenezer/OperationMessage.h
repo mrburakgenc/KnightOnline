@@ -113,6 +113,10 @@ protected:
 	void KingSchedule();
 	void KingNotice();
 	void KingAutoCycle();
+	void KingOrder();
+	void KingPrize();
+	void KingReward();
+	void KingWeather();
 #endif
 
 	bool ParseCommand(const std::string_view command, size_t& key);
