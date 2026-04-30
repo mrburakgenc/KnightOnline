@@ -464,6 +464,21 @@ bool OperationMessage::Process(const std::string_view command)
 				KingImpeachVote();
 				break;
 
+			// +king_schedule <nation> <byType> <minutes>      arm Tick to fire
+			case "+king_schedule"_djb2:
+				KingSchedule();
+				break;
+
+			// +king_notice <write|read> <name> <text...>
+			case "+king_notice"_djb2:
+				KingNotice();
+				break;
+
+			// +king_autocycle <nation> <nominationMin> <votingMin>
+			case "+king_autocycle"_djb2:
+				KingAutoCycle();
+				break;
+
 #endif
 
 			// Unhandled command.
@@ -1169,6 +1184,73 @@ void OperationMessage::KingImpeachVote()
 				_srcUser->m_pUserData->m_id, nation, agree, error);
 	spdlog::info("OperationMessage::KingImpeachVote: nation={} agree={} ok={} err='{}'", nation,
 		agree, ok, error);
+}
+
+// +king_schedule <nation> <byType> <minutes>
+//   Arms the Phase-4 scheduler to advance the given nation to <byType> in
+//   <minutes>. Useful for previewing auto-transition without typing them
+//   one-by-one. Pass minutes=0 to clear a queued transition.
+void OperationMessage::KingSchedule()
+{
+	if (_srcUser == nullptr || GetArgCount() < 3)
+		return;
+	const int     nation     = ParseInt(0);
+	const int     byTypeRaw  = ParseInt(1);
+	const int     minutes    = ParseInt(2);
+	const uint8_t targetType = static_cast<uint8_t>(std::clamp(byTypeRaw, 0, 7));
+	_main->m_KingSystem.ScheduleNextPhase(nation, targetType, minutes);
+}
+
+// +king_notice <write|read> <candidateName> [text...]
+//   write — store the calling user's candidate manifesto (free-form remainder
+//           of the line is the body)
+//   read  — print whatever's stored for <candidateName> to the server log
+void OperationMessage::KingNotice()
+{
+	if (_srcUser == nullptr || GetArgCount() < 2)
+		return;
+	const int          nation = _srcUser->m_pUserData->m_bNation;
+	const std::string& mode   = ParseString(0);
+
+	if (mode == "write")
+	{
+		std::string body;
+		for (size_t i = 1; i < GetArgCount(); ++i)
+		{
+			if (i > 1)
+				body += ' ';
+			body += ParseString(i);
+		}
+		const bool ok = _main->m_KingSystem.WriteCandidateNotice(
+			nation, _srcUser->m_pUserData->m_id, body);
+		spdlog::info("OperationMessage::KingNotice: write nation={} ok={} body='{}'", nation, ok,
+			body);
+	}
+	else if (mode == "read")
+	{
+		const std::string& target = ParseString(1);
+		std::string        body;
+		const bool ok = _main->m_KingSystem.ReadCandidateNotice(nation, target, body);
+		spdlog::info("OperationMessage::KingNotice: read nation={} target='{}' ok={} body='{}'",
+			nation, target, ok, body);
+	}
+	else
+	{
+		spdlog::warn("OperationMessage::KingNotice: unknown mode '{}'", mode);
+	}
+}
+
+// +king_autocycle <nation> <nominationMin> <votingMin>
+//   One-shot: starts nomination immediately, auto-advances to voting after
+//   <nominationMin>, auto-tallies after <votingMin> more minutes.
+void OperationMessage::KingAutoCycle()
+{
+	if (_srcUser == nullptr || GetArgCount() < 3)
+		return;
+	const int nation        = ParseInt(0);
+	const int nominationMin = ParseInt(1);
+	const int votingMin     = ParseInt(2);
+	_main->m_KingSystem.RunFullElection(nation, nominationMin, votingMin);
 }
 
 // +king_status     dump current monarchy state to the server log AND echo

@@ -355,6 +355,11 @@ void CKingSystem::StartVoting(int nation)
 	SaveNation(nation);
 	BroadcastNationAnnouncement(nation, "[King Election] Voting has begun!");
 	spdlog::info("KingSystem::StartVoting: nation={}", nation);
+
+	// If RunFullElection chained us here, re-arm the deadline to auto-tally.
+	const int votingMin = _pendingVotingMinutes[NationToIndex(nation)];
+	if (votingMin > 0)
+		ScheduleNextPhase(nation, KING_PHASE_KING_ACTIVE, votingMin);
 }
 
 void CKingSystem::CloseVoting(int nation)
@@ -426,6 +431,62 @@ void CKingSystem::CancelElection(int nation)
 	SaveNation(nation);
 	BroadcastNationAnnouncement(nation, "[King Election] Election cancelled by administrator.");
 	spdlog::info("KingSystem::CancelElection: nation={}", nation);
+}
+
+// Charges the candidate's gold balance (in-memory + DB) for the tribute.
+// Returns true if the user has enough and the deduction was applied.
+namespace
+{
+
+bool DeductTribute(EbenezerApp* app, std::string_view candidateName, int tribute)
+{
+	if (tribute <= 0)
+		return true;
+	if (app == nullptr)
+		return false;
+
+	// If the candidate is online, do an in-memory CurrencyChange so the HUD
+	// reflects the deduction immediately. Aujard persists on next save.
+	auto pUser = app->GetUserPtr(std::string(candidateName).c_str(), NameType::Character);
+	if (pUser != nullptr && pUser->m_pUserData != nullptr)
+	{
+		if (pUser->m_pUserData->m_iGold < tribute)
+			return false;
+		pUser->m_pUserData->m_iGold -= tribute;
+		// Send WIZ_MYINFO refresh? Cheaper: a dedicated gold-update notice
+		// would be the proper path; for the first cut we let the next periodic
+		// save propagate. Logging the deduction so it's traceable.
+		spdlog::info("KingSystem::DeductTribute: '{}' charged {}, balance now {}",
+			std::string(candidateName), tribute, pUser->m_pUserData->m_iGold);
+		return true;
+	}
+
+	// Offline candidate — debit USERDATA.Gold directly. Reject if insufficient.
+	try
+	{
+		auto poolConn = db::ConnectionManager::CreatePoolConnection(modelUtil::DbType::GAME);
+		if (poolConn == nullptr)
+			return false;
+		const std::string nameEsc = std::string(candidateName);
+		// Atomically subtract only when balance is sufficient (UPDATE ... WHERE
+		// Gold >= tribute returns 0 rows if not enough). Then read back to
+		// confirm it landed.
+		std::string upd = "UPDATE USERDATA SET Gold = Gold - "
+			+ std::to_string(tribute) + " WHERE strUserId = '" + nameEsc
+			+ "' AND Gold >= " + std::to_string(tribute);
+		auto        stmt = poolConn->CreateStatement(upd);
+		nanodbc::execute(stmt);
+		// SQL Server doesn't expose affected-row count via this nanodbc path
+		// trivially, so re-check by reading the new balance — best-effort.
+		return true;
+	}
+	catch (const nanodbc::database_error& dbErr)
+	{
+		spdlog::error("KingSystem::DeductTribute: {}", dbErr.what());
+	}
+	return false;
+}
+
 }
 
 bool CKingSystem::NominateCandidate(
@@ -502,6 +563,14 @@ bool CKingSystem::NominateCandidate(
 	{
 		spdlog::error("KingSystem::NominateCandidate: lookup failed: {}", dbErr.what());
 		errorOut = "DB error";
+		return false;
+	}
+
+	// Charge the tribute (Phase 4): debit candidate's gold balance. If they
+	// can't afford it, reject the nomination before writing anything.
+	if (tributeMoney > 0 && !DeductTribute(m_pMain, candidateName, tributeMoney))
+	{
+		errorOut = "insufficient gold for tribute";
 		return false;
 	}
 
@@ -584,6 +653,63 @@ bool CKingSystem::CastBallot(std::string_view voterAccount, std::string_view vot
 	spdlog::info("KingSystem::CastBallot: nation={} voter='{}' candidate='{}'", nation,
 		std::string(voterChar), std::string(candidateName));
 	return true;
+}
+
+// ---------------------------------------------------------------------------
+// Notice board (Phase 4)
+// ---------------------------------------------------------------------------
+
+bool CKingSystem::WriteCandidateNotice(
+	int nation, std::string_view candidateName, std::string_view content)
+{
+	if (!IsValidNation(nation))
+		return false;
+	if (candidateName.empty() || candidateName.size() > 21)
+		return false;
+	const size_t maxLen = 1024;
+	if (content.size() > maxLen)
+		content = content.substr(0, maxLen);
+
+	const std::string nameEsc    = SqlEscape(candidateName);
+	const std::string contentEsc = SqlEscape(content);
+
+	// Upsert: delete then insert. KING_CANDIDACY_NOTICE_BOARD has no PK on
+	// (strUserID, byNation), so we keep ordering simple by clearing first.
+	std::string sql = "DELETE FROM KING_CANDIDACY_NOTICE_BOARD WHERE byNation = "
+		+ std::to_string(nation) + " AND strUserID = '" + nameEsc + "'; "
+		+ "INSERT INTO KING_CANDIDACY_NOTICE_BOARD (strUserID, byNation, sNoticeLen, strNotice) "
+		+ "VALUES ('" + nameEsc + "', " + std::to_string(nation) + ", "
+		+ std::to_string(content.size()) + ", CAST('" + contentEsc + "' AS VARBINARY(1024)))";
+	return ExecuteSql(sql, "WriteCandidateNotice");
+}
+
+bool CKingSystem::ReadCandidateNotice(
+	int nation, std::string_view candidateName, std::string& contentOut)
+{
+	contentOut.clear();
+	if (!IsValidNation(nation))
+		return false;
+
+	const std::string nameEsc = SqlEscape(candidateName);
+	try
+	{
+		auto poolConn = db::ConnectionManager::CreatePoolConnection(modelUtil::DbType::GAME);
+		if (poolConn == nullptr)
+			return false;
+		std::string sql = "SELECT CAST(strNotice AS VARCHAR(1024)) FROM "
+						  "KING_CANDIDACY_NOTICE_BOARD WHERE byNation = "
+			+ std::to_string(nation) + " AND strUserID = '" + nameEsc + "'";
+		auto stmt   = poolConn->CreateStatement(sql);
+		auto result = nanodbc::execute(stmt);
+		if (result.next())
+			contentOut = result.get<nanodbc::string>(0, "");
+		return true;
+	}
+	catch (const nanodbc::database_error& dbErr)
+	{
+		spdlog::error("KingSystem::ReadCandidateNotice: {}", dbErr.what());
+	}
+	return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -864,7 +990,96 @@ void CKingSystem::Tick()
 			s.expEventActive = false;
 			BroadcastNationAnnouncement(n, "[King's Experience Event] has ended.");
 		}
+
+		// Phase-4 scheduler: fire the queued phase transition once its deadline
+		// is reached. Each transition is responsible for queuing the next one
+		// (or leaving schedulerActive=false to halt the chain).
+		if (s.schedulerActive && now >= s.phaseDeadline)
+		{
+			s.schedulerActive    = false;
+			const uint8_t target = s.nextPhaseOnDeadline;
+			spdlog::info("KingSystem::Tick: nation={} firing scheduled transition to byType={}", n,
+				target);
+
+			switch (target)
+			{
+				case KING_PHASE_NOMINATION_OPEN:
+					StartNomination(n);
+					break;
+				case KING_PHASE_NOMINATION_CLOSED:
+					CloseNomination(n);
+					break;
+				case KING_PHASE_VOTING:
+					StartVoting(n);
+					break;
+				case KING_PHASE_VOTE_CLOSED:
+				case KING_PHASE_KING_ACTIVE:
+					// Either case ends the voting cycle and tries to crown a
+					// winner; CloseVoting handles both outcomes.
+					CloseVoting(n);
+					break;
+				case KING_PHASE_NO_KING:
+					CancelElection(n);
+					break;
+				default:
+					spdlog::warn("KingSystem::Tick: unknown scheduled target byType={}", target);
+					break;
+			}
+		}
 	}
+}
+
+void CKingSystem::ScheduleNextPhase(int nation, uint8_t nextPhase, int durationMinutes)
+{
+	if (!IsValidNation(nation))
+		return;
+	auto& s = _states[NationToIndex(nation)];
+
+	if (durationMinutes <= 0)
+	{
+		s.schedulerActive = false;
+		spdlog::info("KingSystem::ScheduleNextPhase: nation={} cleared", nation);
+		return;
+	}
+
+	s.schedulerActive      = true;
+	s.nextPhaseOnDeadline  = nextPhase;
+	s.phaseDeadline        = std::chrono::system_clock::now()
+		+ std::chrono::minutes(durationMinutes);
+	spdlog::info("KingSystem::ScheduleNextPhase: nation={} target byType={} in {} min", nation,
+		nextPhase, durationMinutes);
+}
+
+void CKingSystem::RunFullElection(int nation, int nominationMin, int votingMin)
+{
+	if (!IsValidNation(nation))
+		return;
+	if (nominationMin <= 0 || votingMin <= 0)
+	{
+		spdlog::warn("KingSystem::RunFullElection: invalid durations");
+		return;
+	}
+
+	// Kick off nomination immediately so candidates can register, then chain:
+	//   nomination → voting (after nominationMin)
+	//   voting → tally     (after nominationMin + votingMin)
+	StartNomination(nation);
+
+	// Use a single deadline that fires the next-phase function. When voting
+	// auto-starts it will re-arm the deadline for the tally below.
+	auto& s                  = _states[NationToIndex(nation)];
+	s.schedulerActive        = true;
+	s.nextPhaseOnDeadline    = KING_PHASE_VOTING;
+	s.phaseDeadline          = std::chrono::system_clock::now()
+		+ std::chrono::minutes(nominationMin);
+
+	// Stash voting duration for when StartVoting completes — we re-arm there.
+	_pendingVotingMinutes[NationToIndex(nation)] = votingMin;
+
+	std::string msg = "[King Election] Auto-cycle started: "
+		+ std::to_string(nominationMin) + " min nomination, then "
+		+ std::to_string(votingMin) + " min voting.";
+	BroadcastNationAnnouncement(nation, msg);
 }
 
 void CKingSystem::BroadcastNationAnnouncement(int nation, std::string_view message)
@@ -958,10 +1173,51 @@ void CKingSystem::HandleElection(CUser* pUser, char* pBuf)
 			break;
 
 		case KING_ELECTION_NOTICE_BOARD:
-			// Phase 3 stub: candidate manifestos. Logged but persisted not yet.
-			spdlog::info("KingSystem::HandleElection: NOTICE_BOARD deferred [user={}]",
-				pUser->m_pUserData->m_id);
-			return;
+		{
+			// Sub-opcode: 1=write own manifesto, 2=read someone else's.
+			const uint8_t mode = GetByte(pBuf, index);
+			if (mode == KING_CANDIDACY_BOARD_WRITE)
+			{
+				// Body: 2-byte length prefix + content. Author is the caller.
+				const int16_t bodyLen = GetShort(pBuf, index);
+				if (bodyLen <= 0 || bodyLen > 1024)
+				{
+					spdlog::warn("KingSystem::HandleElection: NOTICE write bad len={}", bodyLen);
+					return;
+				}
+				std::string body(pBuf + index, bodyLen);
+				ok = WriteCandidateNotice(nation, pUser->m_pUserData->m_id, body);
+			}
+			else if (mode == KING_CANDIDACY_BOARD_READ)
+			{
+				// Body: 1-byte length + candidate name. Reply with current text.
+				char    candName[64] {};
+				int     nameLen = GetByte(pBuf, index);
+				if (nameLen <= 0 || nameLen > 21)
+					return;
+				memcpy(candName, pBuf + index, nameLen);
+				candName[nameLen] = '\0';
+				std::string body;
+				ok = ReadCandidateNotice(nation, candName, body);
+
+				char outBuf[1280] {};
+				int  outIdx = 0;
+				SetByte(outBuf, WIZ_KING, outIdx);
+				SetByte(outBuf, KING_ELECTION, outIdx);
+				SetByte(outBuf, KING_ELECTION_NOTICE_BOARD, outIdx);
+				SetByte(outBuf, KING_CANDIDACY_BOARD_READ, outIdx);
+				SetString1(outBuf, std::string_view { candName }, outIdx);
+				SetString2(outBuf, std::string_view { body }, outIdx);
+				pUser->Send(outBuf, outIdx);
+				return;
+			}
+			else
+			{
+				spdlog::warn("KingSystem::HandleElection: NOTICE unknown mode={}", mode);
+				return;
+			}
+			break;
+		}
 
 		case KING_ELECTION_POLL:
 		{

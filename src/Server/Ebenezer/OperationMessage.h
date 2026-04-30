@@ -110,6 +110,9 @@ protected:
 	void KingVote();
 	void KingImpeach();
 	void KingImpeachVote();
+	void KingSchedule();
+	void KingNotice();
+	void KingAutoCycle();
 #endif
 
 	bool ParseCommand(const std::string_view command, size_t& key);
