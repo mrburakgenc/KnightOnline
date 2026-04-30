@@ -18,6 +18,12 @@
     <Filter Include="shared\infrastructure\persistence">
       <UniqueIdentifier>{a1b2c3d4-1111-2222-3333-444444444403}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared\infrastructure\network">
+      <UniqueIdentifier>{a1b2c3d4-1111-2222-3333-444444444404}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shared\infrastructure\tick">
+      <UniqueIdentifier>{a1b2c3d4-1111-2222-3333-444444444405}</UniqueIdentifier>
+    </Filter>
     <Filter Include="features">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555501}</UniqueIdentifier>
     </Filter>
@@ -103,6 +109,12 @@
     </ClCompile>
     <ClCompile Include="shared\infrastructure\persistence\SqlHelpers.cpp">
       <Filter>shared\infrastructure\persistence</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\infrastructure\network\PacketRouter.cpp">
+      <Filter>shared\infrastructure\network</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\infrastructure\tick\TickScheduler.cpp">
+      <Filter>shared\infrastructure\tick</Filter>
     </ClCompile>
     <ClCompile Include="features\king-system\persistence\KingSystemRepository.cpp">
       <Filter>features\king-system\persistence</Filter>
@@ -198,6 +210,12 @@
     </ClInclude>
     <ClInclude Include="shared\infrastructure\persistence\SqlHelpers.h">
       <Filter>shared\infrastructure\persistence</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\infrastructure\network\PacketRouter.h">
+      <Filter>shared\infrastructure\network</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\infrastructure\tick\TickScheduler.h">
+      <Filter>shared\infrastructure\tick</Filter>
     </ClInclude>
     <ClInclude Include="features\king-system\domain\KingConstants.h">
       <Filter>features\king-system\domain</Filter>

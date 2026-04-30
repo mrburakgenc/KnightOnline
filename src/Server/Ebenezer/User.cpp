@@ -506,6 +506,18 @@ void CUser::Parsing(int len, char* pData)
 	spdlog::trace("User::Parsing: userId={} charId={} command={:02X} len={}", GetSocketID(),
 		m_pUserData->m_id, command, len);
 
+	// VSA migration: features that have moved to vertical slices register
+	// their packet handlers with m_pMain->m_PacketRouter. We dispatch
+	// through the router first; if no handler is bound for `command` we
+	// fall through to the legacy switch below. As features migrate,
+	// their `case WIZ_*` block is deleted from the switch and Bind()'d
+	// on the router instead.
+	if (m_pMain != nullptr
+		&& m_pMain->m_PacketRouter.Dispatch(command, this, pData + index, len - index))
+	{
+		return;
+	}
+
 	switch (command)
 	{
 		case WIZ_LOGIN:

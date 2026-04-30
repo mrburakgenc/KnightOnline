@@ -181,11 +181,15 @@
     <ClCompile Include="UdpSocket.cpp" />
     <ClCompile Include="User.cpp" />
     <ClCompile Include="shared\infrastructure\persistence\SqlHelpers.cpp" />
+    <ClCompile Include="shared\infrastructure\network\PacketRouter.cpp" />
+    <ClCompile Include="shared\infrastructure\tick\TickScheduler.cpp" />
     <ClCompile Include="features\king-system\persistence\KingSystemRepository.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\shared\_USER_DATA.h" />
     <ClInclude Include="shared\infrastructure\persistence\SqlHelpers.h" />
+    <ClInclude Include="shared\infrastructure\network\PacketRouter.h" />
+    <ClInclude Include="shared\infrastructure\tick\TickScheduler.h" />
     <ClInclude Include="features\king-system\domain\KingConstants.h" />
     <ClInclude Include="features\king-system\domain\KingNationState.h" />
     <ClInclude Include="features\king-system\persistence\KingSystemRepository.h" />

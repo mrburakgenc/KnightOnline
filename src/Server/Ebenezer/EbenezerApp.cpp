@@ -3515,6 +3515,13 @@ void EbenezerApp::GameTimeTick()
 {
 	UpdateGameTime();
 
+	// VSA migration: features that have moved to vertical slices subscribe
+	// their periodic work to m_TickScheduler. Run() walks every due
+	// subscription and fires its callback. As features migrate, their
+	// ad-hoc tick block is deleted from this method and replaced by a
+	// Subscribe() call in the feature's module registration.
+	m_TickScheduler.Run();
+
 	// Phase-4 scheduler: expires NOAH/EXP events and fires queued election
 	// phase transitions when their deadlines are reached.
 	m_KingSystem.Tick();

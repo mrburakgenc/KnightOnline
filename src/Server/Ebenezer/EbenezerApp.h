@@ -16,6 +16,9 @@
 #include "EVENT.h"
 #include "UdpSocket.h"
 
+#include <Ebenezer/shared/infrastructure/network/PacketRouter.h>
+#include <Ebenezer/shared/infrastructure/tick/TickScheduler.h>
+
 #include <shared/Ini.h>
 #include <shared-server/AppThread.h>
 #include <shared-server/SharedMemoryBlock.h>
@@ -278,6 +281,13 @@ public:
 	CKnightsManager m_KnightsManager;
 	CKnightsSiegeWar m_KnightsSiegeWar;
 	CKingSystem m_KingSystem;
+
+	// VSA migration: shared infrastructure. Features register packet
+	// handlers and tick subscriptions here during their module's
+	// Register() call. See ARCHITECTURE.md §5-6 and MIGRATION-INVENTORY.md
+	// for the migration plan.
+	Shared::Network::PacketRouter m_PacketRouter;
+	Shared::Tick::TickScheduler   m_TickScheduler;
 
 	int16_t m_sPartyIndex;
 	int16_t m_sZoneCount;   // AI Server 재접속시 사용
