@@ -5,6 +5,12 @@
 #include "User.h"
 #include "Define.h"
 
+#include <db-library/Connection.h>
+#include <db-library/ConnectionManager.h>
+#include <db-library/PoolConnection.h>
+#include <ModelUtil/ModelUtil.h>
+#include <nanodbc/nanodbc.h>
+
 #include <shared/packets.h>
 
 #include <spdlog/spdlog.h>
@@ -101,6 +107,8 @@ void CKingSystem::SetKing(int nation, std::string_view name)
 	// pass immediately. Aujard persists these on the next user save.
 	ApplyRoyaltyToOnlineUser(s.strKingName, /*isKing*/ true);
 
+	SaveNation(nation);
+
 	std::string msg = "[King] ";
 	msg += s.strKingName;
 	msg += " has ascended to the throne!";
@@ -127,6 +135,8 @@ void CKingSystem::ClearKing(int nation)
 		msg += " no longer reigns.";
 		BroadcastNationAnnouncement(nation, msg);
 	}
+
+	SaveNation(nation);
 }
 
 void CKingSystem::ApplyRoyaltyToOnlineUser(const std::string& charName, bool isKing)
@@ -159,6 +169,7 @@ void CKingSystem::SetTax(int nation, uint8_t tariff, int territoryTax)
 	s.nTerritoryTax     = territoryTax;
 	spdlog::info("KingSystem::SetTax: nation={} tariff={} territoryTax={}", nation, tariff,
 		territoryTax);
+	SaveNation(nation);
 }
 
 void CKingSystem::StartNoahEvent(int nation, int bonusPercent, int durationMinutes)
@@ -229,6 +240,116 @@ int CKingSystem::GetNoahEventBonus(int nation) const
 	if (std::chrono::system_clock::now() >= s.noahEventEnd)
 		return 0;
 	return s.noahEventBonusPercent;
+}
+
+bool CKingSystem::LoadFromDb()
+{
+	try
+	{
+		auto poolConn = db::ConnectionManager::CreatePoolConnection(modelUtil::DbType::GAME);
+		if (poolConn == nullptr)
+		{
+			spdlog::error("KingSystem::LoadFromDb: failed to obtain DB pool connection");
+			return false;
+		}
+
+		nanodbc::statement stmt = poolConn->CreateStatement(
+			"SELECT byNation, byType, strKingName, byTerritoryTariff, nTerritoryTax, "
+			"nNationalTreasury FROM KING_SYSTEM");
+		nanodbc::result    result = nanodbc::execute(stmt);
+
+		int loadedRows = 0;
+		while (result.next())
+		{
+			const int nation = result.get<int>(0);
+			if (!IsValidNation(nation))
+				continue;
+
+			auto& s             = _states[NationToIndex(nation)];
+			s.byType            = static_cast<uint8_t>(result.get<int>(1, 0));
+			s.strKingName       = result.get<nanodbc::string>(2, "");
+			s.byTerritoryTariff = static_cast<uint8_t>(result.get<int>(3, 0));
+			s.nTerritoryTax     = result.get<int>(4, 0);
+			s.nNationalTreasury = result.get<int>(5, 0);
+			++loadedRows;
+
+			spdlog::info("KingSystem::LoadFromDb: nation={} byType={} king='{}' tariff={} "
+						 "tax={} treasury={}",
+				nation, s.byType, s.strKingName, s.byTerritoryTariff, s.nTerritoryTax,
+				s.nNationalTreasury);
+		}
+
+		if (loadedRows == 0)
+			spdlog::warn("KingSystem::LoadFromDb: KING_SYSTEM table is empty; using defaults");
+		return true;
+	}
+	catch (const nanodbc::database_error& dbErr)
+	{
+		spdlog::error("KingSystem::LoadFromDb: nanodbc error: {}", dbErr.what());
+	}
+	catch (const std::exception& ex)
+	{
+		spdlog::error("KingSystem::LoadFromDb: unexpected error: {}", ex.what());
+	}
+	return false;
+}
+
+void CKingSystem::SaveNation(int nation)
+{
+	if (!IsValidNation(nation))
+		return;
+	const auto& s = _states[NationToIndex(nation)];
+
+	// Escape single quotes for inline SQL. Other fields are integers so no
+	// injection surface beyond strKingName, which is already constrained to
+	// USERDATA character names (alphanumerics) by upstream callers.
+	std::string escapedName;
+	escapedName.reserve(s.strKingName.size() + 4);
+	for (char c : s.strKingName)
+	{
+		if (c == '\'')
+			escapedName += "''";
+		else
+			escapedName += c;
+	}
+
+	std::string sql = "UPDATE KING_SYSTEM SET byType = ";
+	sql += std::to_string(static_cast<int>(s.byType));
+	sql += ", strKingName = '";
+	sql += escapedName;
+	sql += "', byTerritoryTariff = ";
+	sql += std::to_string(static_cast<int>(s.byTerritoryTariff));
+	sql += ", nTerritoryTax = ";
+	sql += std::to_string(s.nTerritoryTax);
+	sql += ", nNationalTreasury = ";
+	sql += std::to_string(s.nNationalTreasury);
+	sql += " WHERE byNation = ";
+	sql += std::to_string(nation);
+
+	try
+	{
+		auto poolConn = db::ConnectionManager::CreatePoolConnection(modelUtil::DbType::GAME);
+		if (poolConn == nullptr)
+		{
+			spdlog::error("KingSystem::SaveNation: failed to obtain DB pool connection");
+			return;
+		}
+
+		nanodbc::statement stmt = poolConn->CreateStatement(sql);
+		nanodbc::execute(stmt);
+		spdlog::info("KingSystem::SaveNation: persisted nation={} byType={} king='{}'", nation,
+			s.byType, s.strKingName);
+	}
+	catch (const nanodbc::database_error& dbErr)
+	{
+		spdlog::error(
+			"KingSystem::SaveNation: nanodbc error for nation={}: {}", nation, dbErr.what());
+	}
+	catch (const std::exception& ex)
+	{
+		spdlog::error(
+			"KingSystem::SaveNation: unexpected error for nation={}: {}", nation, ex.what());
+	}
 }
 
 void CKingSystem::Tick()

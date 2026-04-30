@@ -1057,7 +1057,9 @@ void OperationMessage::KingTax()
 		nation, static_cast<uint8_t>(std::clamp(tariff, 0, 100)), territoryTax);
 }
 
-// +king_status     dump current monarchy state to the server log
+// +king_status     dump current monarchy state to the server log AND echo
+// a one-line summary back to the calling GM as a chat notice so it's visible
+// in-game without having to tail the log file.
 void OperationMessage::KingStatus()
 {
 	for (int n = KING_NATION_KARUS; n <= KING_NATION_ELMORAD; ++n)
@@ -1068,6 +1070,27 @@ void OperationMessage::KingStatus()
 			"noahEvent={} (+{}%) expEvent={} (+{}%)",
 			n, s.byType, s.strKingName, s.byTerritoryTariff, s.nTerritoryTax, s.nNationalTreasury,
 			s.noahEventActive, s.noahEventBonusPercent, s.expEventActive, s.expEventBonusPercent);
+
+		if (_srcUser != nullptr)
+		{
+			std::string line = fmt::format(
+				"[{}] type={} king='{}' tariff={} treasury={} noah={}{}% exp={}{}%",
+				(n == KING_NATION_KARUS ? "Karus" : "ElMorad"), s.byType, s.strKingName,
+				s.byTerritoryTariff, s.nNationalTreasury, s.noahEventActive ? "ON +" : "OFF ",
+				s.noahEventBonusPercent, s.expEventActive ? "ON +" : "OFF ",
+				s.expEventBonusPercent);
+
+			char    buffer[256] {};
+			int     idx     = 0;
+			const std::string_view body { line.data(), std::min<size_t>(line.size(), 200) };
+			SetByte(buffer, WIZ_CHAT, idx);
+			SetByte(buffer, ANNOUNCEMENT_CHAT, idx);
+			SetByte(buffer, _srcUser->m_pUserData->m_bNation, idx);
+			SetShort(buffer, -1, idx);
+			SetString1(buffer, std::string_view("KingSystem"), idx);
+			SetString2(buffer, body, idx);
+			_srcUser->Send(buffer, idx);
+		}
 	}
 }
 #endif

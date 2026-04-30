@@ -73,6 +73,15 @@ public:
 	// system works without DB integration. Called by EbenezerApp init.
 	void InitDefaults();
 
+	// Hydrates in-memory state from the KING_SYSTEM table (one row per
+	// nation). Returns false on DB error; the in-memory defaults remain.
+	// Called once at startup after the DB connection is configured.
+	bool LoadFromDb();
+
+	// Persists the given nation's row back to KING_SYSTEM. Best-effort:
+	// errors are logged but don't propagate so gameplay isn't blocked.
+	void SaveNation(int nation);
+
 	// Per-tick maintenance. Expires events whose deadline has elapsed.
 	void Tick();
 

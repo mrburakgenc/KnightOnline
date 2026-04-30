@@ -321,6 +321,13 @@ bool EbenezerApp::OnStart()
 		return false;
 	}
 
+	spdlog::info("EbenezerApp::OnStart: hydrating KING_SYSTEM");
+	if (!m_KingSystem.LoadFromDb())
+	{
+		// Non-fatal — gameplay can proceed with default (no-king) state.
+		spdlog::warn("EbenezerApp::OnStart: KING_SYSTEM hydration failed; continuing with defaults");
+	}
+
 	spdlog::info("EbenezerApp::OnStart: loading ITEM_UPGRADE table");
 	if (!LoadItemUpgradeTable())
 	{
