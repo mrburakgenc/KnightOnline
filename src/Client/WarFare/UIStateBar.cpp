@@ -298,7 +298,10 @@ void CUIStateBar::UpdateHP(int iHP, int iHPMax, bool bUpdateImmediately)
 		m_pProgress_HP->SetCurValue(iPercentage, 0.3f, 100.0f);
 
 	// NOTE: adding the HP text
-	__ASSERT(iHP >= 0 && iHP < 10000 && iHPMax >= 0 && iHPMax < 10000, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+	// Original asserted iHP < 10000 — see CUIState::UpdateHP for the same fix.
+	// Level 80 characters routinely have 15000+ HP and this fired on every
+	// HUD refresh as a Debug Assertion Failed dialog.
+	__ASSERT(iHP >= 0 && iHPMax >= 0, "negative HP in CUIStateBar::UpdateHP");
 	if (m_pText_HP == nullptr)
 		return;
 
