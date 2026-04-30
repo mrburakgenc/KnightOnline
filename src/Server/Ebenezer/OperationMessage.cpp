@@ -499,6 +499,8 @@ bool OperationMessage::Process(const std::string_view command)
 
 			// Unhandled command.
 			default:
+				spdlog::warn("OperationMessage::Process: UNHANDLED command='{}' key={}",
+					_command, key);
 				return false;
 		}
 	}
