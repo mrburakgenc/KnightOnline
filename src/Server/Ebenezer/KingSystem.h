@@ -109,6 +109,30 @@ public:
 	void StartExpEvent(int nation, int bonusPercent, int durationMinutes);
 	void StopEvents(int nation);
 
+	// ----- Election state machine (Phase 3) -----
+	// Drives the byType phase transitions:
+	//   0 (no king) → 1 (nomination open) → 2 (nomination closed)
+	//      → 3 (voting open) → 4 (voting closed) → 7 (king crowned)
+	// Each transition writes the new byType to KING_SYSTEM via SaveNation.
+	void StartNomination(int nation);
+	void CloseNomination(int nation);
+	void StartVoting(int nation);
+	void CloseVoting(int nation);                 // tallies, crowns winner
+	void CancelElection(int nation);              // resets to byType=0
+	bool NominateCandidate(
+		std::string_view candidateName, int nation, int tributeMoney, std::string& errorOut);
+	bool CastBallot(std::string_view voterAccount, std::string_view voterChar, int nation,
+		std::string_view candidateName, std::string& errorOut);
+
+	// ----- Impeachment workflow (Phase 3) -----
+	// Impeachment is a parallel state. We track it via the existing
+	// KING_BALLOT_BOX (reused) and report results from KING_IMPEACHMENT_RESULT
+	// semantics (total voters vs agree voters).
+	void StartImpeachment(int nation);
+	void CloseImpeachment(int nation, int requiredAgreePercent = 51);
+	bool CastImpeachmentVote(std::string_view voterAccount, std::string_view voterChar, int nation,
+		bool agree, std::string& errorOut);
+
 	// Sends an ANNOUNCEMENT_CHAT line to every user in `nation` (1 or 2),
 	// or to everyone if nation == 0.
 	void BroadcastNationAnnouncement(int nation, std::string_view message);

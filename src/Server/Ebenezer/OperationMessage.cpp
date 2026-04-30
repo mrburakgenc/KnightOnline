@@ -439,6 +439,31 @@ bool OperationMessage::Process(const std::string_view command)
 				KingStatus();
 				break;
 
+			// +king_phase <nation> <open|close|vote|tally|cancel>
+			case "+king_phase"_djb2:
+				KingPhase();
+				break;
+
+			// +king_nominate <nation> <charName> [tribute]
+			case "+king_nominate"_djb2:
+				KingNominate();
+				break;
+
+			// +king_vote <nation> <candidateName>
+			case "+king_vote"_djb2:
+				KingVote();
+				break;
+
+			// +king_impeach <nation> <start|tally> [requiredAgree%]
+			case "+king_impeach"_djb2:
+				KingImpeach();
+				break;
+
+			// +king_impeach_vote <nation> <yes|no>
+			case "+king_impeach_vote"_djb2:
+				KingImpeachVote();
+				break;
+
 #endif
 
 			// Unhandled command.
@@ -1055,6 +1080,95 @@ void OperationMessage::KingTax()
 									: _main->m_KingSystem.GetState(nation).nTerritoryTax;
 	_main->m_KingSystem.SetTax(
 		nation, static_cast<uint8_t>(std::clamp(tariff, 0, 100)), territoryTax);
+}
+
+// +king_phase <nation> <open|close|vote|tally|cancel>
+//   open   → byType 1 (nomination)
+//   close  → byType 2 (nominations closed)
+//   vote   → byType 3/4 (voting active, candidates promoted)
+//   tally  → byType 7 (winner crowned) or 0 if nobody ran
+//   cancel → byType 0 (clear everything)
+void OperationMessage::KingPhase()
+{
+	if (_srcUser == nullptr || GetArgCount() < 2)
+		return;
+	const int          nation = ParseInt(0);
+	const std::string& action = ParseString(1);
+
+	if (action == "open")
+		_main->m_KingSystem.StartNomination(nation);
+	else if (action == "close")
+		_main->m_KingSystem.CloseNomination(nation);
+	else if (action == "vote")
+		_main->m_KingSystem.StartVoting(nation);
+	else if (action == "tally")
+		_main->m_KingSystem.CloseVoting(nation);
+	else if (action == "cancel")
+		_main->m_KingSystem.CancelElection(nation);
+	else
+		spdlog::warn("OperationMessage::KingPhase: unknown action '{}'", action);
+}
+
+// +king_nominate <nation> <charName> [tribute]
+void OperationMessage::KingNominate()
+{
+	if (_srcUser == nullptr || GetArgCount() < 2)
+		return;
+	const int          nation     = ParseInt(0);
+	const std::string& charName   = ParseString(1);
+	const int          tribute    = (GetArgCount() >= 3) ? ParseInt(2) : 0;
+	std::string        error;
+	const bool         ok = _main->m_KingSystem.NominateCandidate(charName, nation, tribute, error);
+	spdlog::info("OperationMessage::KingNominate: nation={} candidate='{}' ok={} err='{}'",
+		nation, charName, ok, error);
+}
+
+// +king_vote <nation> <candidateName>     casts a ballot AS the calling GM
+void OperationMessage::KingVote()
+{
+	if (_srcUser == nullptr || GetArgCount() < 2)
+		return;
+	const int          nation     = ParseInt(0);
+	const std::string& candidate  = ParseString(1);
+	std::string        error;
+	const bool         ok         = _main->m_KingSystem.CastBallot(_srcUser->m_strAccountID,
+				_srcUser->m_pUserData->m_id, nation, candidate, error);
+	spdlog::info("OperationMessage::KingVote: nation={} candidate='{}' ok={} err='{}'", nation,
+		candidate, ok, error);
+}
+
+// +king_impeach <nation> <start|tally> [requiredAgree%]
+void OperationMessage::KingImpeach()
+{
+	if (_srcUser == nullptr || GetArgCount() < 2)
+		return;
+	const int          nation = ParseInt(0);
+	const std::string& action = ParseString(1);
+
+	if (action == "start")
+		_main->m_KingSystem.StartImpeachment(nation);
+	else if (action == "tally")
+	{
+		const int required = (GetArgCount() >= 3) ? ParseInt(2) : 51;
+		_main->m_KingSystem.CloseImpeachment(nation, required);
+	}
+	else
+		spdlog::warn("OperationMessage::KingImpeach: unknown action '{}'", action);
+}
+
+// +king_impeach_vote <nation> <yes|no>
+void OperationMessage::KingImpeachVote()
+{
+	if (_srcUser == nullptr || GetArgCount() < 2)
+		return;
+	const int          nation = ParseInt(0);
+	const std::string& choice = ParseString(1);
+	const bool         agree  = (choice == "yes" || choice == "y" || choice == "1");
+	std::string        error;
+	const bool         ok     = _main->m_KingSystem.CastImpeachmentVote(_srcUser->m_strAccountID,
+				_srcUser->m_pUserData->m_id, nation, agree, error);
+	spdlog::info("OperationMessage::KingImpeachVote: nation={} agree={} ok={} err='{}'", nation,
+		agree, ok, error);
 }
 
 // +king_status     dump current monarchy state to the server log AND echo
