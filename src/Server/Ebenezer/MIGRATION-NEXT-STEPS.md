@@ -1,7 +1,7 @@
 # Ebenezer VSA Migration — Next-Steps Handoff
 
 **Branch:** `arch/ebenezer-vsa-migration`
-**Last commit checked in:** Phase 3.5 — Promotion (this commit).
+**Last commit checked in:** `adff83df` (Phase 3.5 — Promotion).
 **Remote:** `origin/arch/ebenezer-vsa-migration` is up to date.
 
 This document is the resume point for future sessions (any agent, any human). Read this **before** `ARCHITECTURE.md` and `MIGRATION-INVENTORY.md`; those are the contract and the catalog, this is the bookmark.
@@ -19,7 +19,7 @@ This document is the resume point for future sessions (any agent, any human). Re
 | 2 | `features/chat/`               | Router-bound   | `60404a42`   | Binds `WIZ_CHAT` (0x10) and `WIZ_CHAT_TARGET` (0x11).        |
 | 3 | `features/loyalty/`            | Service-only   | `43e1692c`   | NP + Manner + chicken-party distribution preserved verbatim. |
 | 4 | `features/item-repair/`        | Router-bound   | `ec7b64d2`   | Binds `WIZ_ITEM_REPAIR` (NPC blacksmith durability repair). |
-| 5 | `features/promotion/`          | Router-bound   | (this commit)| Binds `WIZ_CLASS_CHANGE` (lvl-60 promotion + stat/skill respec quote). |
+| 5 | `features/promotion/`          | Router-bound   | `adff83df`   | Binds `WIZ_CLASS_CHANGE` (lvl-60 promotion + stat/skill respec quote). |
 
 ### Shared infrastructure (Phase 2, ready for use)
 
