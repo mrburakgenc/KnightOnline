@@ -629,9 +629,6 @@ void CUser::Parsing(int len, char* pData)
 			m_MagicProcess.MagicPacket(pData + index);
 			break;
 
-		case WIZ_OBJECT_EVENT:
-			ObjectEvent(pData + index);
-			break;
 
 		case WIZ_WEATHER:
 		case WIZ_TIME:
@@ -9485,72 +9482,6 @@ void CUser::SendItemUpgradeRequest(int16_t npcId)
 	SetByte(send_buff, ITEM_UPGRADE_REQ, send_index);
 	SetShort(send_buff, npcId, send_index);
 	Send(send_buff, send_index);
-}
-
-void CUser::ObjectEvent(char* pBuf)
-{
-	int index = 0, objectIndex = 0, npcId = 0;
-	uint8_t objectType    = 0;
-	C3DMap* pMap          = nullptr;
-	_OBJECT_EVENT* pEvent = nullptr;
-
-	objectIndex           = GetShort(pBuf, index);
-	npcId                 = GetShort(pBuf, index);
-
-	pMap                  = m_pMain->GetMapByIndex(m_iZoneIndex);
-	if (pMap == nullptr)
-		return;
-
-	pEvent = pMap->GetObjectEvent(objectIndex);
-	if (pEvent == nullptr)
-	{
-		SendObjectEventFailed(objectType);
-		return;
-	}
-
-	objectType = static_cast<uint8_t>(pEvent->sType);
-
-	switch (pEvent->sType)
-	{
-		case OBJECT_TYPE_BIND:
-		case OBJECT_TYPE_REMOVE_BIND:
-			if (!BindObjectEvent(objectIndex, npcId))
-				SendObjectEventFailed(objectType);
-			break;
-
-		case OBJECT_TYPE_GATE:
-		case OBJECT_TYPE_DOOR_TOPDOWN:
-			//if (!GateObjectEvent(objectIndex, npcId))
-			// SendObjectEventFailed(objectType);
-			break;
-
-		case OBJECT_TYPE_GATE_LEVER:
-			if (!GateLeverObjectEvent(objectIndex, npcId))
-				SendObjectEventFailed(objectType);
-			break;
-
-		// Flag lever
-		case OBJECT_TYPE_FLAG:
-			if (!FlagObjectEvent(objectIndex, npcId))
-				SendObjectEventFailed(objectType);
-			break;
-
-		case OBJECT_TYPE_WARP_GATE:
-			if (!WarpListObjectEvent(objectIndex, npcId))
-				SendObjectEventFailed(objectType);
-			break;
-
-		case OBJECT_TYPE_ANVIL:
-			SendItemUpgradeRequest(npcId);
-			break;
-
-		default:
-			spdlog::error("User::ObjectEvent: Unhandled object type {} [objectIndex={} npcId={} "
-						  "accountName={} characterName={}]",
-				pEvent->sType, objectIndex, npcId, m_strAccountID, m_pUserData->m_id);
-			SendObjectEventFailed(objectType);
-			break;
-	}
 }
 
 void CUser::SendObjectEventFailed(uint8_t objectType, uint8_t errorCode /*= 0*/)

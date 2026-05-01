@@ -521,7 +521,6 @@ public:
 
 	void MSpChange(int amount);
 	void UpdateGameWeather(char* pBuf, uint8_t type);
-	void ObjectEvent(char* pBuf);
 	void SendObjectEventFailed(uint8_t objectType, uint8_t errorCode = 0);
 	bool ExecuteExchange();
 	void InitExchange(bool bStart);

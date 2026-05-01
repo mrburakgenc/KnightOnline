@@ -24,6 +24,7 @@
 #include <Ebenezer/features/item-repair/handlers/ItemRepairService.h>
 #include <Ebenezer/features/leveling/handlers/LevelingService.h>
 #include <Ebenezer/features/loyalty/handlers/LoyaltyService.h>
+#include <Ebenezer/features/object-events/handlers/ObjectEventsService.h>
 #include <Ebenezer/features/party-bbs/handlers/PartyBbsService.h>
 #include <Ebenezer/features/party/handlers/PartyService.h>
 #include <Ebenezer/features/promotion/handlers/PromotionService.h>
@@ -308,6 +309,7 @@ public:
 	Features::ItemRepair::ItemRepairService m_ItemRepairService;
 	Features::Leveling::LevelingService     m_LevelingService;
 	Features::Loyalty::LoyaltyService       m_LoyaltyService;
+	Features::ObjectEvents::ObjectEventsService m_ObjectEventsService;
 	Features::PartyBbs::PartyBbsService     m_PartyBbsService;
 	Features::Party::PartyService           m_PartyService;
 	Features::Promotion::PromotionService   m_PromotionService;
