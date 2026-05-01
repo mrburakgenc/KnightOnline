@@ -195,6 +195,8 @@
     <ClCompile Include="features\loyalty\handlers\LoyaltyService.cpp" />
     <ClCompile Include="features\party-bbs\handlers\PartyBbsService.cpp" />
     <ClCompile Include="features\party-bbs\PartyBbsModule.cpp" />
+    <ClCompile Include="features\party\handlers\PartyService.cpp" />
+    <ClCompile Include="features\party\PartyModule.cpp" />
     <ClCompile Include="features\promotion\handlers\PromotionService.cpp" />
     <ClCompile Include="features\promotion\PromotionModule.cpp" />
     <ClCompile Include="features\stats\handlers\StatsService.cpp" />
@@ -220,6 +222,8 @@
     <ClInclude Include="features\loyalty\handlers\LoyaltyService.h" />
     <ClInclude Include="features\party-bbs\handlers\PartyBbsService.h" />
     <ClInclude Include="features\party-bbs\PartyBbsModule.h" />
+    <ClInclude Include="features\party\handlers\PartyService.h" />
+    <ClInclude Include="features\party\PartyModule.h" />
     <ClInclude Include="features\promotion\handlers\PromotionService.h" />
     <ClInclude Include="features\promotion\PromotionModule.h" />
     <ClInclude Include="features\stats\handlers\StatsService.h" />

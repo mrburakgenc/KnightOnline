@@ -536,7 +536,6 @@ public:
 	void PartyInsert();
 	void PartyCancel();
 	void PartyRequest(int memberid, bool bCreate);
-	void PartyProcess(char* pBuf);
 	void SendNotice();
 	void UserLookChange(int pos, int itemid, int durability);
 	void SpeedHackUser();

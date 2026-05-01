@@ -93,6 +93,12 @@
     <Filter Include="features\stats\handlers">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555517}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\party">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555518}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\party\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555519}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -220,6 +226,12 @@
     </ClCompile>
     <ClCompile Include="features\stats\StatsModule.cpp">
       <Filter>features\stats</Filter>
+    </ClCompile>
+    <ClCompile Include="features\party\handlers\PartyService.cpp">
+      <Filter>features\party\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\party\PartyModule.cpp">
+      <Filter>features\party</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -375,6 +387,12 @@
     </ClInclude>
     <ClInclude Include="features\stats\StatsModule.h">
       <Filter>features\stats</Filter>
+    </ClInclude>
+    <ClInclude Include="features\party\handlers\PartyService.h">
+      <Filter>features\party\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\party\PartyModule.h">
+      <Filter>features\party</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

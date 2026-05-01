@@ -621,10 +621,6 @@ void CUser::Parsing(int len, char* pData)
 			//	SpeedHackUser();
 			//	break;
 
-		case WIZ_PARTY:
-			PartyProcess(pData + index);
-			break;
-
 		case WIZ_EXCHANGE:
 			ExchangeProcess(pData + index);
 			break;
@@ -5490,76 +5486,6 @@ void CUser::SendNotice()
 	SetByte(sendBuffer, WIZ_NOTICE, temp_index);
 	SetByte(sendBuffer, count, temp_index);
 	Send(sendBuffer, sendIndex);
-}
-
-void CUser::PartyProcess(char* pBuf)
-{
-	int index = 0, idlength = 0, memberid = -1;
-	char strid[MAX_ID_SIZE + 1] {};
-	std::shared_ptr<CUser> pUser;
-	uint8_t subcommand = 0, result = 0;
-
-	subcommand = GetByte(pBuf, index);
-	switch (subcommand)
-	{
-		case PARTY_CREATE:
-			idlength = GetShort(pBuf, index);
-			if (idlength <= 0 || idlength > MAX_ID_SIZE)
-				return;
-
-			GetString(strid, pBuf, idlength, index);
-
-			pUser = m_pMain->GetUserPtr(strid, NameType::Character);
-			if (pUser != nullptr)
-			{
-				memberid = pUser->GetSocketID();
-				PartyRequest(memberid, true);
-			}
-			break;
-
-		case PARTY_PERMIT:
-			result = GetByte(pBuf, index);
-			if (result != 0)
-				PartyInsert();
-			// 거절한 경우
-			else
-				PartyCancel();
-			break;
-
-		case PARTY_INSERT:
-			idlength = GetShort(pBuf, index);
-			if (idlength <= 0 || idlength > MAX_ID_SIZE)
-				return;
-
-			GetString(strid, pBuf, idlength, index);
-
-			pUser = m_pMain->GetUserPtr(strid, NameType::Character);
-			if (pUser != nullptr)
-			{
-				memberid = pUser->GetSocketID();
-				PartyRequest(memberid, false);
-			}
-			break;
-
-		case PARTY_REMOVE:
-			memberid = GetShort(pBuf, index);
-			PartyRemove(memberid);
-			break;
-
-		case PARTY_DELETE:
-			PartyDelete();
-			break;
-
-		default:
-			spdlog::error(
-				"User::PartyProcess: Unhandled opcode {:02X} [accountName={} characterName={}]",
-				subcommand, m_strAccountID, m_pUserData->m_id);
-
-#ifndef _DEBUG
-			Close();
-#endif
-			break;
-	}
 }
 
 // 거절한 사람한테 온다... 리더를 찾아서 알려주는 함수

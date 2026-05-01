@@ -26,6 +26,7 @@
 #include <Ebenezer/features/home/HomeModule.h>
 #include <Ebenezer/features/item-repair/ItemRepairModule.h>
 #include <Ebenezer/features/party-bbs/PartyBbsModule.h>
+#include <Ebenezer/features/party/PartyModule.h>
 #include <Ebenezer/features/promotion/PromotionModule.h>
 #include <Ebenezer/features/stats/StatsModule.h>
 
@@ -343,6 +344,7 @@ bool EbenezerApp::OnStart()
 	Features::Home::HomeModule::Register(m_PacketRouter, m_HomeService);
 	Features::ItemRepair::ItemRepairModule::Register(m_PacketRouter, m_ItemRepairService);
 	Features::PartyBbs::PartyBbsModule::Register(m_PacketRouter, m_PartyBbsService);
+	Features::Party::PartyModule::Register(m_PacketRouter, m_PartyService);
 	Features::Promotion::PromotionModule::Register(m_PacketRouter, m_PromotionService);
 	Features::Stats::StatsModule::Register(m_PacketRouter, m_StatsService);
 	spdlog::info("EbenezerApp::OnStart: PacketRouter has {} bound opcode(s)",
