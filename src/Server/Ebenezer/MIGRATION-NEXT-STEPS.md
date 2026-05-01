@@ -1,7 +1,7 @@
 # Ebenezer VSA Migration — Next-Steps Handoff
 
 **Branch:** `arch/ebenezer-vsa-migration`
-**Last commit checked in:** `103b1ee5` (Phase 3.8 — Leveling). First Phase 3B (medium-risk) slice shipped.
+**Last commit checked in:** Phase 3.9 — Stats (this commit).
 **Remote:** `origin/arch/ebenezer-vsa-migration` is up to date.
 
 This document is the resume point for future sessions (any agent, any human). Read this **before** `ARCHITECTURE.md` and `MIGRATION-INVENTORY.md`; those are the contract and the catalog, this is the bookmark.
@@ -23,10 +23,11 @@ This document is the resume point for future sessions (any agent, any human). Re
 | 6 | `features/home/`               | Router-bound   | `d036a09f`   | Binds `WIZ_HOME` + `WIZ_REGENE` (bind point + resurrect; CUser::Regene retained for clerical magic). |
 | 7 | `features/party-bbs/`          | Router-bound   | `d8753164`   | Binds `WIZ_PARTY_BBS` (LFG bulletin board: register / delete / needed). |
 | 8 | `features/leveling/`           | Service-only   | `103b1ee5`   | Owns `ExpChange` + `LevelChange`; CUser methods are forwarders. |
+| 9 | `features/stats/`              | Router-bound   | (this commit)| Binds `WIZ_POINT_CHANGE` + `WIZ_SKILLPT_CHANGE` (stat / skill alloc). |
 
 ### Shared infrastructure (Phase 2, ready for use)
 
-- `shared/infrastructure/network/PacketRouter` — opcode → handler map. Currently 7 opcodes bound (chat × 2, item-repair, promotion, home × 2, party-bbs).
+- `shared/infrastructure/network/PacketRouter` — opcode → handler map. Currently 9 opcodes bound (chat × 2, item-repair, promotion, home × 2, party-bbs, stats × 2).
 - `shared/infrastructure/tick/TickScheduler` — periodic-task subscriber. Currently 0 subscriptions.
 - `shared/infrastructure/persistence/SqlHelpers` — `ExecuteSql`, `SqlEscape`. Used by the King System repo.
 
@@ -92,7 +93,6 @@ The "low-risk" pass (item-repair, promotion, home, party-bbs) is now shipped. Pi
 
 | #  | Slice                  | Pattern  | Notes                                                                  |
 |----|------------------------|----------|------------------------------------------------------------------------|
-| 9  | `features/stats/`      | Router   | `WIZ_POINT_CHANGE`, `WIZ_SKILLPT_CHANGE`. Stat / skill alloc.          |
 | 10 | `features/party/`      | Router   | `WIZ_PARTY`. Runtime state in `EbenezerApp::m_PartyMap`.               |
 | 11 | `features/object-events/`| Service| Trap / lever / gate / bind state machines.                             |
 | 12 | `features/item-upgrade/` | Router | `WIZ_ITEM_UPGRADE`. RNG + durability mutation, ~600 LOC.               |
@@ -169,6 +169,7 @@ Per-slice gameplay smoke tests (do these in-game with `LeqenDRapToR`):
 | Home           | `/town` warps to nation start; die → resurrect at bind; cleric Resurrection on a corpse. |
 | Party BBS      | Open the LFG board: register a note, request the needed list, delete your note.        |
 | Leveling       | Kill mob → exp bar moves; cross threshold → WIZ_LEVEL_CHANGE; die in non-battle zone above lvl 6 → exp drops. |
+| Stats          | Spend a stat point in each of STR/STA/DEX/INT/CHA; spend a skill point into one tree.   |
 | Home           | Die → respawn at bind; type `/home` (or whatever the actual binding is).               |
 
 ---
@@ -210,4 +211,4 @@ Per-slice gameplay smoke tests (do these in-game with `LeqenDRapToR`):
 
 ---
 
-Last updated: Phase 3.8 commit (Leveling) — first Phase 3B slice shipped.
+Last updated: Phase 3.9 commit (Stats).

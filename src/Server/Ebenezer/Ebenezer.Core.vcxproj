@@ -197,6 +197,8 @@
     <ClCompile Include="features\party-bbs\PartyBbsModule.cpp" />
     <ClCompile Include="features\promotion\handlers\PromotionService.cpp" />
     <ClCompile Include="features\promotion\PromotionModule.cpp" />
+    <ClCompile Include="features\stats\handlers\StatsService.cpp" />
+    <ClCompile Include="features\stats\StatsModule.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\shared\_USER_DATA.h" />
@@ -220,6 +222,8 @@
     <ClInclude Include="features\party-bbs\PartyBbsModule.h" />
     <ClInclude Include="features\promotion\handlers\PromotionService.h" />
     <ClInclude Include="features\promotion\PromotionModule.h" />
+    <ClInclude Include="features\stats\handlers\StatsService.h" />
+    <ClInclude Include="features\stats\StatsModule.h" />
     <ClInclude Include="AISocket.h" />
     <ClInclude Include="db_resources.h" />
     <ClInclude Include="Define.h" />

@@ -523,7 +523,6 @@ public:
 	void UpdateGameWeather(char* pBuf, uint8_t type);
 	void ObjectEvent(char* pBuf);
 	void SendObjectEventFailed(uint8_t objectType, uint8_t errorCode = 0);
-	void SkillPointChange(char* pBuf);
 	bool ExecuteExchange();
 	void InitExchange(bool bStart);
 	void ExchangeCancel();
@@ -559,7 +558,6 @@ public:
 	void ChangeMannerPoint(int loyaltyChange);
 
 	void StateChange(char* pBuf);
-	void PointChange(char* pBuf);
 	void ZoneChange(int zone, float x, float z);
 	void ItemGet(char* pBuf);
 	static bool IsValidName(const char* name);

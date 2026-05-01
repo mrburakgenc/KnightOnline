@@ -26,6 +26,7 @@
 #include <Ebenezer/features/loyalty/handlers/LoyaltyService.h>
 #include <Ebenezer/features/party-bbs/handlers/PartyBbsService.h>
 #include <Ebenezer/features/promotion/handlers/PromotionService.h>
+#include <Ebenezer/features/stats/handlers/StatsService.h>
 
 #include <shared/Ini.h>
 #include <shared-server/AppThread.h>
@@ -308,6 +309,7 @@ public:
 	Features::Loyalty::LoyaltyService       m_LoyaltyService;
 	Features::PartyBbs::PartyBbsService     m_PartyBbsService;
 	Features::Promotion::PromotionService   m_PromotionService;
+	Features::Stats::StatsService           m_StatsService;
 
 	int16_t m_sPartyIndex;
 	int16_t m_sZoneCount;   // AI Server 재접속시 사용

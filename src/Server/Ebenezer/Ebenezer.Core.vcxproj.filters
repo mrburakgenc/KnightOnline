@@ -87,6 +87,12 @@
     <Filter Include="features\leveling\handlers">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555515}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\stats">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555516}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\stats\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555517}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -208,6 +214,12 @@
     </ClCompile>
     <ClCompile Include="features\leveling\handlers\LevelingService.cpp">
       <Filter>features\leveling\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\stats\handlers\StatsService.cpp">
+      <Filter>features\stats\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\stats\StatsModule.cpp">
+      <Filter>features\stats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -357,6 +369,12 @@
     </ClInclude>
     <ClInclude Include="features\leveling\handlers\LevelingService.h">
       <Filter>features\leveling\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\stats\handlers\StatsService.h">
+      <Filter>features\stats\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\stats\StatsModule.h">
+      <Filter>features\stats</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

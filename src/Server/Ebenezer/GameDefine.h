@@ -160,7 +160,7 @@ enum e_InvasionMonumentType : uint8_t
 ////////////////////////////////////////////////////////////
 // USER POINT DEFINE
 enum e_StatType : uint8_t
-{ /* explicitly used by CUser::PointChange() */
+{ /* explicitly used by Features::Stats::StatsService::HandlePointChange */
 	STAT_TYPE_STR   = 1,
 	STAT_TYPE_STA   = 2,
 	STAT_TYPE_DEX   = 3,

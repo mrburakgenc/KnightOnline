@@ -609,10 +609,6 @@ void CUser::Parsing(int len, char* pData)
 			RecvZoneChange(pData + index);
 			break;
 
-		case WIZ_POINT_CHANGE:
-			PointChange(pData + index);
-			break;
-
 		case WIZ_STATE_CHANGE:
 			StateChange(pData + index);
 			break;
@@ -635,10 +631,6 @@ void CUser::Parsing(int len, char* pData)
 
 		case WIZ_MAGIC_PROCESS:
 			m_MagicProcess.MagicPacket(pData + index);
-			break;
-
-		case WIZ_SKILLPT_CHANGE:
-			SkillPointChange(pData + index);
 			break;
 
 		case WIZ_OBJECT_EVENT:
@@ -3672,112 +3664,6 @@ void CUser::LevelChange(int16_t level, bool bLevelUp)
 	m_pMain->m_LevelingService.LevelChange(*this, level, bLevelUp);
 }
 
-void CUser::PointChange(char* pBuf)
-{
-	int index = 0, sendIndex = 0, value = 0;
-	uint8_t type = 0x00;
-	char sendBuffer[128] {};
-
-	type  = GetByte(pBuf, index);
-	value = GetShort(pBuf, index);
-
-	if (type > 5 || abs(value) > 1)
-		return;
-
-	if (m_pUserData->m_bPoints < 1)
-		return;
-
-	switch (type)
-	{
-		case STAT_TYPE_STR:
-			if (m_pUserData->m_bStr == 255)
-				return;
-			break;
-
-		case STAT_TYPE_STA:
-			if (m_pUserData->m_bSta == 255)
-				return;
-			break;
-
-		case STAT_TYPE_DEX:
-			if (m_pUserData->m_bDex == 255)
-				return;
-			break;
-
-		case STAT_TYPE_INTEL:
-			if (m_pUserData->m_bIntel == 255)
-				return;
-			break;
-
-		case STAT_TYPE_CHA:
-			if (m_pUserData->m_bCha == 255)
-				return;
-			break;
-
-		default:
-			spdlog::error("User::PointChange: Unhandled stat type {} [characterName={}]", type,
-				m_pUserData->m_id);
-
-#ifndef _DEBUG
-			Close();
-#endif
-			return;
-	}
-
-	m_pUserData->m_bPoints -= value;
-
-	SetByte(sendBuffer, WIZ_POINT_CHANGE, sendIndex);
-	SetByte(sendBuffer, type, sendIndex);
-	switch (type)
-	{
-		case STAT_TYPE_STR:
-			++m_pUserData->m_bStr;
-			SetShort(sendBuffer, m_pUserData->m_bStr, sendIndex);
-			SetUserAbility();
-			break;
-
-		case STAT_TYPE_STA:
-			++m_pUserData->m_bSta;
-			SetShort(sendBuffer, m_pUserData->m_bSta, sendIndex);
-			SetMaxHp();
-			SetMaxMp();
-			break;
-
-		case STAT_TYPE_DEX:
-			++m_pUserData->m_bDex;
-			SetShort(sendBuffer, m_pUserData->m_bDex, sendIndex);
-			SetUserAbility();
-			break;
-
-		case STAT_TYPE_INTEL:
-			++m_pUserData->m_bIntel;
-			SetShort(sendBuffer, m_pUserData->m_bIntel, sendIndex);
-			SetMaxMp();
-			break;
-
-		case STAT_TYPE_CHA:
-			++m_pUserData->m_bCha;
-			SetShort(sendBuffer, m_pUserData->m_bCha, sendIndex);
-			break;
-
-		default:
-			spdlog::error(
-				"User::PointChange: Unhandled stat type in 2nd switch {} [characterName={}]", type,
-				m_pUserData->m_id);
-
-#ifndef _DEBUG
-			Close();
-#endif
-			return;
-	}
-
-	SetShort(sendBuffer, m_iMaxHp, sendIndex);
-	SetShort(sendBuffer, m_iMaxMp, sendIndex);
-	SetShort(sendBuffer, m_sTotalHit, sendIndex);
-	SetShort(sendBuffer, GetMaxWeightForClient(), sendIndex);
-	Send(sendBuffer, sendIndex);
-}
-
 // type : Received From AIServer -> 1, The Others -> 0
 // attack : Direct Attack(true) or Other Case(false)
 void CUser::HpChange(int amount, int type, bool attack)
@@ -6666,34 +6552,6 @@ int CUser::ExchangeDone()
 	}
 
 	return money;
-}
-
-void CUser::SkillPointChange(char* pBuf)
-{
-	int index = 0, sendIndex = 0;
-	uint8_t type = 0;
-	char sendBuffer[128] {};
-
-	type = GetByte(pBuf, index);
-	if (type > 8)
-		return; // goto fail_return;
-
-	if (m_pUserData->m_bstrSkill[0] < 1)
-		goto fail_return;
-
-	if ((m_pUserData->m_bstrSkill[type] + 1) > m_pUserData->m_bLevel)
-		goto fail_return;
-
-	m_pUserData->m_bstrSkill[0]    -= 1;
-	m_pUserData->m_bstrSkill[type] += 1;
-
-	return;
-
-fail_return:
-	SetByte(sendBuffer, WIZ_SKILLPT_CHANGE, sendIndex);
-	SetByte(sendBuffer, type, sendIndex);
-	SetByte(sendBuffer, m_pUserData->m_bstrSkill[type], sendIndex);
-	Send(sendBuffer, sendIndex);
 }
 
 void CUser::UpdateGameWeather(char* pBuf, uint8_t type)
