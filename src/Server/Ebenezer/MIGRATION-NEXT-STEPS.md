@@ -1,7 +1,7 @@
 # Ebenezer VSA Migration — Next-Steps Handoff
 
 **Branch:** `arch/ebenezer-vsa-migration`
-**Last commit checked in:** `87bd3271` (Phase 3.14 — Market BBS).
+**Last commit checked in:** Phase 3.15 — NPC (this commit). Phase 3B (medium-risk) complete.
 **Remote:** `origin/arch/ebenezer-vsa-migration` is up to date.
 
 This document is the resume point for future sessions (any agent, any human). Read this **before** `ARCHITECTURE.md` and `MIGRATION-INVENTORY.md`; those are the contract and the catalog, this is the bookmark.
@@ -29,10 +29,11 @@ This document is the resume point for future sessions (any agent, any human). Re
 | 12 | `features/item-upgrade/`      | Router-bound   | `f676442a`   | Binds `WIZ_ITEM_UPGRADE` (anvil weapon / accessory upgrade dispatcher). |
 | 13 | `features/warehouse/`         | Router-bound   | `9fd8afe8`   | Binds `WIZ_WAREHOUSE` (per-account bank — body remains on CUser::WarehouseProcess). |
 | 14 | `features/market-bbs/`        | Router-bound   | `87bd3271`   | Binds `WIZ_MARKET_BBS` (buy/sell board — register / delete / open / report / remote-purchase / message). |
+| 15 | `features/npc/`               | Router-bound   | (this commit)| Binds `WIZ_REQ_NPCIN` + `WIZ_NPC_EVENT` (region NPC list + interaction dispatcher). |
 
 ### Shared infrastructure (Phase 2, ready for use)
 
-- `shared/infrastructure/network/PacketRouter` — opcode → handler map. Currently 14 opcodes bound (chat × 2, item-repair, promotion, home × 2, party-bbs, stats × 2, party, object-events, item-upgrade, warehouse, market-bbs).
+- `shared/infrastructure/network/PacketRouter` — opcode → handler map. Currently 16 opcodes bound (chat × 2, item-repair, promotion, home × 2, party-bbs, stats × 2, party, object-events, item-upgrade, warehouse, market-bbs, npc × 2).
 - `shared/infrastructure/tick/TickScheduler` — periodic-task subscriber. Currently 0 subscriptions.
 - `shared/infrastructure/persistence/SqlHelpers` — `ExecuteSql`, `SqlEscape`. Used by the King System repo.
 
@@ -94,11 +95,9 @@ Each line is a 30-60 minute migration once you have the patterns memorized.
 
 The "low-risk" pass (item-repair, promotion, home, party-bbs) is now shipped. Pivot to Phase 3B medium-risk slices below.
 
-### Phase 3B (medium-risk)
+### Phase 3B complete
 
-| #  | Slice                  | Pattern  | Notes                                                                  |
-|----|------------------------|----------|------------------------------------------------------------------------|
-| 15 | `features/npc/`        | Mixed    | `WIZ_REQ_NPCIN`, `WIZ_NPC_EVENT`. Big dispatcher; split by NPC kind.   |
+Leveling, Stats, Party, Object Events, Item Upgrade, Warehouse, Market BBS, and NPC have all shipped. Pivot to Phase 3C (high-coupling) below.
 
 ### Phase 3C (high-coupling — last)
 
@@ -175,6 +174,7 @@ Per-slice gameplay smoke tests (do these in-game with `LeqenDRapToR`):
 | Item Upgrade   | Anvil weapon upgrade success/fail; accessory upgrade; verify durability mutation.       |
 | Warehouse      | Open warehouse NPC; deposit + withdraw an item and gold; verify trade-lockout fail.     |
 | Market BBS     | Open market board; post sell note; filtered listing; remote purchase; GM broadcast.     |
+| NPC            | Zone in (NPCs visible); right-click each NPC kind to confirm interaction dispatch.       |
 | Home           | Die → respawn at bind; type `/home` (or whatever the actual binding is).               |
 
 ---
@@ -216,4 +216,4 @@ Per-slice gameplay smoke tests (do these in-game with `LeqenDRapToR`):
 
 ---
 
-Last updated: Phase 3.14 commit (Market BBS).
+Last updated: Phase 3.15 commit (NPC) — Phase 3B complete.

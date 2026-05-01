@@ -27,6 +27,7 @@
 #include <Ebenezer/features/item-repair/ItemRepairModule.h>
 #include <Ebenezer/features/item-upgrade/ItemUpgradeModule.h>
 #include <Ebenezer/features/market-bbs/MarketBbsModule.h>
+#include <Ebenezer/features/npc/NpcModule.h>
 #include <Ebenezer/features/object-events/ObjectEventsModule.h>
 #include <Ebenezer/features/party-bbs/PartyBbsModule.h>
 #include <Ebenezer/features/party/PartyModule.h>
@@ -349,6 +350,7 @@ bool EbenezerApp::OnStart()
 	Features::ItemRepair::ItemRepairModule::Register(m_PacketRouter, m_ItemRepairService);
 	Features::ItemUpgrade::ItemUpgradeModule::Register(m_PacketRouter, m_ItemUpgradeService);
 	Features::MarketBbs::MarketBbsModule::Register(m_PacketRouter, m_MarketBbsService);
+	Features::Npc::NpcModule::Register(m_PacketRouter, m_NpcService);
 	Features::ObjectEvents::ObjectEventsModule::Register(m_PacketRouter, m_ObjectEventsService);
 	Features::PartyBbs::PartyBbsModule::Register(m_PacketRouter, m_PartyBbsService);
 	Features::Party::PartyModule::Register(m_PacketRouter, m_PartyService);

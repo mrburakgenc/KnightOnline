@@ -568,10 +568,6 @@ void CUser::Parsing(int len, char* pData)
 			RequestUserIn(pData + index);
 			break;
 
-		case WIZ_REQ_NPCIN:
-			RequestNpcIn(pData + index);
-			break;
-
 		case WIZ_WARP:
 			if (m_pUserData->m_bAuthority == AUTHORITY_MANAGER)
 				Warp(pData + index);
@@ -581,9 +577,6 @@ void CUser::Parsing(int len, char* pData)
 			ItemMove(pData + index);
 			break;
 
-		case WIZ_NPC_EVENT:
-			NpcEvent(pData + index);
-			break;
 
 		case WIZ_ITEM_TRADE:
 			ItemTrade(pData + index);

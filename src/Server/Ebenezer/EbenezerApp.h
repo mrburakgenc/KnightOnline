@@ -26,6 +26,7 @@
 #include <Ebenezer/features/leveling/handlers/LevelingService.h>
 #include <Ebenezer/features/loyalty/handlers/LoyaltyService.h>
 #include <Ebenezer/features/market-bbs/handlers/MarketBbsService.h>
+#include <Ebenezer/features/npc/handlers/NpcService.h>
 #include <Ebenezer/features/object-events/handlers/ObjectEventsService.h>
 #include <Ebenezer/features/party-bbs/handlers/PartyBbsService.h>
 #include <Ebenezer/features/party/handlers/PartyService.h>
@@ -314,6 +315,7 @@ public:
 	Features::Leveling::LevelingService     m_LevelingService;
 	Features::Loyalty::LoyaltyService       m_LoyaltyService;
 	Features::MarketBbs::MarketBbsService   m_MarketBbsService;
+	Features::Npc::NpcService               m_NpcService;
 	Features::ObjectEvents::ObjectEventsService m_ObjectEventsService;
 	Features::PartyBbs::PartyBbsService     m_PartyBbsService;
 	Features::Party::PartyService           m_PartyService;

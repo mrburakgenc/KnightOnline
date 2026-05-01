@@ -123,6 +123,12 @@
     <Filter Include="features\market-bbs\handlers">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555521}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\npc">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555522}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\npc\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555523}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -280,6 +286,12 @@
     </ClCompile>
     <ClCompile Include="features\market-bbs\MarketBbsModule.cpp">
       <Filter>features\market-bbs</Filter>
+    </ClCompile>
+    <ClCompile Include="features\npc\handlers\NpcService.cpp">
+      <Filter>features\npc\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\npc\NpcModule.cpp">
+      <Filter>features\npc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -465,6 +477,12 @@
     </ClInclude>
     <ClInclude Include="features\market-bbs\MarketBbsModule.h">
       <Filter>features\market-bbs</Filter>
+    </ClInclude>
+    <ClInclude Include="features\npc\handlers\NpcService.h">
+      <Filter>features\npc\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\npc\NpcModule.h">
+      <Filter>features\npc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
