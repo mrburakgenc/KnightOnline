@@ -509,7 +509,6 @@ public:
 	void SendUserInfo(char* temp_send, int& index);
 	// VSA migration: WIZ_CHAT_TARGET migrated to features/chat/ slice.
 	bool ItemEquipAvailable(const model::Item* pTable) const;
-	void ClassChange(char* pBuf);
 
 	/// \brief Issues the level 60 promotion quest
 	void GivePromotionQuest();

@@ -24,6 +24,7 @@
 
 #include <Ebenezer/features/chat/ChatModule.h>
 #include <Ebenezer/features/item-repair/ItemRepairModule.h>
+#include <Ebenezer/features/promotion/PromotionModule.h>
 
 #include <fstream>
 #include <ranges>
@@ -337,6 +338,7 @@ bool EbenezerApp::OnStart()
 	spdlog::info("EbenezerApp::OnStart: registering migrated feature modules");
 	Features::Chat::ChatModule::Register(m_PacketRouter, m_ChatService);
 	Features::ItemRepair::ItemRepairModule::Register(m_PacketRouter, m_ItemRepairService);
+	Features::Promotion::PromotionModule::Register(m_PacketRouter, m_PromotionService);
 	spdlog::info("EbenezerApp::OnStart: PacketRouter has {} bound opcode(s)",
 		m_PacketRouter.BoundCount());
 

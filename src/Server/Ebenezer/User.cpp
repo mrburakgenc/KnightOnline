@@ -656,10 +656,6 @@ void CUser::Parsing(int len, char* pData)
 			UpdateGameWeather(pData + index, command);
 			break;
 
-		case WIZ_CLASS_CHANGE:
-			ClassChange(pData + index);
-			break;
-
 		case WIZ_CONCURRENTUSER:
 			CountConcurrentUser();
 			break;
@@ -6856,103 +6852,6 @@ void CUser::UpdateGameWeather(char* pBuf, uint8_t type)
 		SetShort(sendBuffer, m_pMain->m_nHour, sendIndex);
 		SetShort(sendBuffer, m_pMain->m_nMin, sendIndex);
 		m_pMain->Send_All(sendBuffer, sendIndex);
-	}
-}
-
-void CUser::ClassChange(char* pBuf)
-{
-	int index   = 0;
-	auto opcode = static_cast<e_ClassChangeOpcode>(GetByte(pBuf, index));
-	switch (opcode)
-	{
-		// 전직요청
-		case CLASS_CHANGE_STATUS_REQ:
-			NovicePromotionStatusRequest();
-			break;
-
-		// 포인트 초기화
-		case CLASS_RESET_STAT_REQ:
-			StatPointResetRequest();
-			break;
-
-		// 스킬 초기화
-		case CLASS_RESET_SKILL_REQ:
-			SkillPointResetRequest();
-			break;
-
-		// 포인트 & 스킬 초기화에 돈이 얼마인지를 묻는 서브 패킷
-		case CLASS_RESET_COST_REQ:
-		{
-			int sendIndex = 0, sub_type = 0, money = 0;
-			char sendBuffer[128] {};
-
-			sub_type = GetByte(pBuf, index);
-
-			money    = static_cast<int>(pow((m_pUserData->m_bLevel * 2), 3.4));
-			money    = (money / 100) * 100;
-
-			if (m_pUserData->m_bLevel < 30)
-				money = static_cast<int>(money * 0.4);
-#if 0
-			else if (m_pUserData->m_bLevel >= 30
-				&& m_pUserData->m_bLevel < 60)
-				money = static_cast<int>(money * 1);
-#endif
-			else if (m_pUserData->m_bLevel >= 60 && m_pUserData->m_bLevel <= 90)
-				money = static_cast<int>(money * 1.5);
-
-			// 능력치 포인트
-			if (sub_type == 1)
-			{
-				// 할인시점이고 승리국이라면
-				if (m_pMain->m_sDiscount == 1 && m_pMain->m_byOldVictory == m_pUserData->m_bNation)
-				{
-					// old_money = money;
-					money = static_cast<int>(money * 0.5);
-					//TRACE(_T("^^ ClassChange -  point Discount ,, money=%d->%d\n"), old_money, money);
-				}
-
-				if (m_pMain->m_sDiscount == 2)
-				{
-					// old_money = money;
-					money = static_cast<int>(money * 0.5);
-				}
-
-				SetByte(sendBuffer, WIZ_CLASS_CHANGE, sendIndex);
-				SetByte(sendBuffer, CLASS_RESET_COST_REQ, sendIndex);
-				SetDWORD(sendBuffer, money, sendIndex);
-				Send(sendBuffer, sendIndex);
-			}
-			// skill 포인트
-			else if (sub_type == 2)
-			{
-				// 스킬은 한번 더
-				money = static_cast<int>(money * 1.5);
-
-				// 할인시점이고 승리국이라면
-				if (m_pMain->m_sDiscount == 1 && m_pMain->m_byOldVictory == m_pUserData->m_bNation)
-				{
-					// old_money = money;
-					money = static_cast<int>(money * 0.5);
-					//TRACE(_T("^^ ClassChange -  skillpoint Discount ,, money=%d->%d\n"), old_money, money);
-				}
-
-				if (m_pMain->m_sDiscount == 2)
-				{
-					// old_money = money;
-					money = static_cast<int>(money * 0.5);
-				}
-
-				SetByte(sendBuffer, WIZ_CLASS_CHANGE, sendIndex);
-				SetByte(sendBuffer, CLASS_RESET_COST_REQ, sendIndex);
-				SetDWORD(sendBuffer, money, sendIndex);
-				Send(sendBuffer, sendIndex);
-			}
-		}
-		break;
-
-		default:
-			break;
 	}
 }
 

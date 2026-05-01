@@ -63,6 +63,12 @@
     <Filter Include="features\loyalty\handlers">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555550B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\promotion">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555550E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\promotion\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555550F}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -163,6 +169,12 @@
     </ClCompile>
     <ClCompile Include="features\loyalty\handlers\LoyaltyService.cpp">
       <Filter>features\loyalty\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\promotion\handlers\PromotionService.cpp">
+      <Filter>features\promotion\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\promotion\PromotionModule.cpp">
+      <Filter>features\promotion</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -291,6 +303,12 @@
     </ClInclude>
     <ClInclude Include="features\loyalty\handlers\LoyaltyService.h">
       <Filter>features\loyalty\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\promotion\handlers\PromotionService.h">
+      <Filter>features\promotion\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\promotion\PromotionModule.h">
+      <Filter>features\promotion</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

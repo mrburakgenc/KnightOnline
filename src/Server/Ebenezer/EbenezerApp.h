@@ -22,6 +22,7 @@
 #include <Ebenezer/features/chat/handlers/ChatService.h>
 #include <Ebenezer/features/item-repair/handlers/ItemRepairService.h>
 #include <Ebenezer/features/loyalty/handlers/LoyaltyService.h>
+#include <Ebenezer/features/promotion/handlers/PromotionService.h>
 
 #include <shared/Ini.h>
 #include <shared-server/AppThread.h>
@@ -300,6 +301,7 @@ public:
 	Features::Chat::ChatService             m_ChatService;
 	Features::ItemRepair::ItemRepairService m_ItemRepairService;
 	Features::Loyalty::LoyaltyService       m_LoyaltyService;
+	Features::Promotion::PromotionService   m_PromotionService;
 
 	int16_t m_sPartyIndex;
 	int16_t m_sZoneCount;   // AI Server 재접속시 사용

@@ -190,6 +190,8 @@
     <ClCompile Include="features\item-repair\handlers\ItemRepairService.cpp" />
     <ClCompile Include="features\item-repair\ItemRepairModule.cpp" />
     <ClCompile Include="features\loyalty\handlers\LoyaltyService.cpp" />
+    <ClCompile Include="features\promotion\handlers\PromotionService.cpp" />
+    <ClCompile Include="features\promotion\PromotionModule.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\shared\_USER_DATA.h" />
@@ -206,6 +208,8 @@
     <ClInclude Include="features\item-repair\handlers\ItemRepairService.h" />
     <ClInclude Include="features\item-repair\ItemRepairModule.h" />
     <ClInclude Include="features\loyalty\handlers\LoyaltyService.h" />
+    <ClInclude Include="features\promotion\handlers\PromotionService.h" />
+    <ClInclude Include="features\promotion\PromotionModule.h" />
     <ClInclude Include="AISocket.h" />
     <ClInclude Include="db_resources.h" />
     <ClInclude Include="Define.h" />
