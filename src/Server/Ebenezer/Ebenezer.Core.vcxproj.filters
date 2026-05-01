@@ -117,6 +117,12 @@
     <Filter Include="features\warehouse\handlers">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555551F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\market-bbs">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555520}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\market-bbs\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555521}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -268,6 +274,12 @@
     </ClCompile>
     <ClCompile Include="features\warehouse\WarehouseModule.cpp">
       <Filter>features\warehouse</Filter>
+    </ClCompile>
+    <ClCompile Include="features\market-bbs\handlers\MarketBbsService.cpp">
+      <Filter>features\market-bbs\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\market-bbs\MarketBbsModule.cpp">
+      <Filter>features\market-bbs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -447,6 +459,12 @@
     </ClInclude>
     <ClInclude Include="features\warehouse\WarehouseModule.h">
       <Filter>features\warehouse</Filter>
+    </ClInclude>
+    <ClInclude Include="features\market-bbs\handlers\MarketBbsService.h">
+      <Filter>features\market-bbs\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\market-bbs\MarketBbsModule.h">
+      <Filter>features\market-bbs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

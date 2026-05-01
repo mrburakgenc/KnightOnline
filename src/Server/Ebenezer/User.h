@@ -431,7 +431,6 @@ public:
 	void MarketBBSReport(char* pBuf, uint8_t type);
 	void MarketBBSDelete(char* pBuf);
 	void MarketBBSRegister(char* pBuf);
-	void MarketBBS(char* pBuf);
 	void PartyBBSNeeded(char* pBuf, uint8_t type);
 	void PartyBBSDelete(char* pBuf);
 	void PartyBBSRegister(char* pBuf);

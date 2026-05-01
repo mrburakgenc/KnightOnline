@@ -195,6 +195,8 @@
     <ClCompile Include="features\item-upgrade\ItemUpgradeModule.cpp" />
     <ClCompile Include="features\leveling\handlers\LevelingService.cpp" />
     <ClCompile Include="features\loyalty\handlers\LoyaltyService.cpp" />
+    <ClCompile Include="features\market-bbs\handlers\MarketBbsService.cpp" />
+    <ClCompile Include="features\market-bbs\MarketBbsModule.cpp" />
     <ClCompile Include="features\object-events\handlers\ObjectEventsService.cpp" />
     <ClCompile Include="features\object-events\ObjectEventsModule.cpp" />
     <ClCompile Include="features\party-bbs\handlers\PartyBbsService.cpp" />
@@ -228,6 +230,8 @@
     <ClInclude Include="features\item-upgrade\ItemUpgradeModule.h" />
     <ClInclude Include="features\leveling\handlers\LevelingService.h" />
     <ClInclude Include="features\loyalty\handlers\LoyaltyService.h" />
+    <ClInclude Include="features\market-bbs\handlers\MarketBbsService.h" />
+    <ClInclude Include="features\market-bbs\MarketBbsModule.h" />
     <ClInclude Include="features\object-events\handlers\ObjectEventsService.h" />
     <ClInclude Include="features\object-events\ObjectEventsModule.h" />
     <ClInclude Include="features\party-bbs\handlers\PartyBbsService.h" />

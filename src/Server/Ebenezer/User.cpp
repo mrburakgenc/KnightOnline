@@ -692,9 +692,6 @@ void CUser::Parsing(int len, char* pData)
 			ServerChangeOk(pData + index);
 			break;
 
-		case WIZ_MARKET_BBS:
-			MarketBBS(pData + index);
-			break;
 
 		case WIZ_KICKOUT:
 			KickOut(pData + index);
@@ -9754,57 +9751,6 @@ fail_return:
 	SetByte(sendBuffer, PARTY_BBS_NEEDED, sendIndex);
 	SetByte(sendBuffer, result, sendIndex);
 	Send(sendBuffer, sendIndex);
-}
-
-void CUser::MarketBBS(char* pBuf)
-{
-	int index          = 0;
-	uint8_t subcommand = GetByte(pBuf, index);
-
-	MarketBBSBuyPostFilter(); // Get rid of empty slots.
-	MarketBBSSellPostFilter();
-
-	switch (subcommand)
-	{
-		// When you register a message on the Market BBS.
-		case MARKET_BBS_REGISTER:
-			MarketBBSRegister(pBuf + index);
-			break;
-
-		// When you delete your message on the Market BBS.
-		case MARKET_BBS_DELETE:
-			MarketBBSDelete(pBuf + index);
-			break;
-
-		// Get the 'needed' messages from the Market BBS.
-		case MARKET_BBS_REPORT:
-			MarketBBSReport(pBuf + index, MARKET_BBS_REPORT);
-			break;
-
-		// When you first open the Market BBS.
-		case MARKET_BBS_OPEN:
-			MarketBBSReport(pBuf + index, MARKET_BBS_OPEN);
-			break;
-
-		// When you agree to spend money on remote bartering.
-		case MARKET_BBS_REMOTE_PURCHASE:
-			MarketBBSRemotePurchase(pBuf + index);
-			break;
-
-		// USE ONLY IN EMERGENCY!!!
-		case MARKET_BBS_MESSAGE:
-			MarketBBSMessage(pBuf + index);
-			break;
-
-		default:
-			spdlog::error("User::MarketBBS: Unhandled opcode {:02X} [characterName={}]", subcommand,
-				m_pUserData->m_id);
-
-#ifndef _DEBUG
-			Close();
-#endif
-			break;
-	}
 }
 
 void CUser::MarketBBSRegister(char* pBuf)
