@@ -1,7 +1,7 @@
 # Ebenezer VSA Migration — Next-Steps Handoff
 
 **Branch:** `arch/ebenezer-vsa-migration`
-**Last commit checked in:** Phase 3.8 — Leveling (this commit). First Phase 3B (medium-risk) slice shipped.
+**Last commit checked in:** `103b1ee5` (Phase 3.8 — Leveling). First Phase 3B (medium-risk) slice shipped.
 **Remote:** `origin/arch/ebenezer-vsa-migration` is up to date.
 
 This document is the resume point for future sessions (any agent, any human). Read this **before** `ARCHITECTURE.md` and `MIGRATION-INVENTORY.md`; those are the contract and the catalog, this is the bookmark.
@@ -22,7 +22,7 @@ This document is the resume point for future sessions (any agent, any human). Re
 | 5 | `features/promotion/`          | Router-bound   | `adff83df`   | Binds `WIZ_CLASS_CHANGE` (lvl-60 promotion + stat/skill respec quote). |
 | 6 | `features/home/`               | Router-bound   | `d036a09f`   | Binds `WIZ_HOME` + `WIZ_REGENE` (bind point + resurrect; CUser::Regene retained for clerical magic). |
 | 7 | `features/party-bbs/`          | Router-bound   | `d8753164`   | Binds `WIZ_PARTY_BBS` (LFG bulletin board: register / delete / needed). |
-| 8 | `features/leveling/`           | Service-only   | (this commit)| Owns `ExpChange` + `LevelChange`; CUser methods are forwarders. |
+| 8 | `features/leveling/`           | Service-only   | `103b1ee5`   | Owns `ExpChange` + `LevelChange`; CUser methods are forwarders. |
 
 ### Shared infrastructure (Phase 2, ready for use)
 
