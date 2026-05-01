@@ -30,6 +30,7 @@
 #include <Ebenezer/features/party/handlers/PartyService.h>
 #include <Ebenezer/features/promotion/handlers/PromotionService.h>
 #include <Ebenezer/features/stats/handlers/StatsService.h>
+#include <Ebenezer/features/warehouse/handlers/WarehouseService.h>
 
 #include <shared/Ini.h>
 #include <shared-server/AppThread.h>
@@ -316,6 +317,7 @@ public:
 	Features::Party::PartyService           m_PartyService;
 	Features::Promotion::PromotionService   m_PromotionService;
 	Features::Stats::StatsService           m_StatsService;
+	Features::Warehouse::WarehouseService   m_WarehouseService;
 
 	int16_t m_sPartyIndex;
 	int16_t m_sZoneCount;   // AI Server 재접속시 사용

@@ -31,6 +31,7 @@
 #include <Ebenezer/features/party/PartyModule.h>
 #include <Ebenezer/features/promotion/PromotionModule.h>
 #include <Ebenezer/features/stats/StatsModule.h>
+#include <Ebenezer/features/warehouse/WarehouseModule.h>
 
 #include <fstream>
 #include <ranges>
@@ -351,6 +352,7 @@ bool EbenezerApp::OnStart()
 	Features::Party::PartyModule::Register(m_PacketRouter, m_PartyService);
 	Features::Promotion::PromotionModule::Register(m_PacketRouter, m_PromotionService);
 	Features::Stats::StatsModule::Register(m_PacketRouter, m_StatsService);
+	Features::Warehouse::WarehouseModule::Register(m_PacketRouter, m_WarehouseService);
 	spdlog::info("EbenezerApp::OnStart: PacketRouter has {} bound opcode(s)",
 		m_PacketRouter.BoundCount());
 

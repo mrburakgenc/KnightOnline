@@ -668,10 +668,6 @@ void CUser::Parsing(int len, char* pData)
 			ServerStatusCheck();
 			break;
 
-		case WIZ_WAREHOUSE:
-			WarehouseProcess(pData + index);
-			break;
-
 		case WIZ_REPORT_BUG:
 			ReportBug(pData + index);
 			break;

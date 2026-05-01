@@ -111,6 +111,12 @@
     <Filter Include="features\item-upgrade\handlers">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555551D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\warehouse">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555551E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\warehouse\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555551F}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -256,6 +262,12 @@
     </ClCompile>
     <ClCompile Include="features\item-upgrade\ItemUpgradeModule.cpp">
       <Filter>features\item-upgrade</Filter>
+    </ClCompile>
+    <ClCompile Include="features\warehouse\handlers\WarehouseService.cpp">
+      <Filter>features\warehouse\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\warehouse\WarehouseModule.cpp">
+      <Filter>features\warehouse</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -429,6 +441,12 @@
     </ClInclude>
     <ClInclude Include="features\item-upgrade\ItemUpgradeModule.h">
       <Filter>features\item-upgrade</Filter>
+    </ClInclude>
+    <ClInclude Include="features\warehouse\handlers\WarehouseService.h">
+      <Filter>features\warehouse\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\warehouse\WarehouseModule.h">
+      <Filter>features\warehouse</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

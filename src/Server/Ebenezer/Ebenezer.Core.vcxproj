@@ -205,6 +205,8 @@
     <ClCompile Include="features\promotion\PromotionModule.cpp" />
     <ClCompile Include="features\stats\handlers\StatsService.cpp" />
     <ClCompile Include="features\stats\StatsModule.cpp" />
+    <ClCompile Include="features\warehouse\handlers\WarehouseService.cpp" />
+    <ClCompile Include="features\warehouse\WarehouseModule.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\shared\_USER_DATA.h" />
@@ -236,6 +238,8 @@
     <ClInclude Include="features\promotion\PromotionModule.h" />
     <ClInclude Include="features\stats\handlers\StatsService.h" />
     <ClInclude Include="features\stats\StatsModule.h" />
+    <ClInclude Include="features\warehouse\handlers\WarehouseService.h" />
+    <ClInclude Include="features\warehouse\WarehouseModule.h" />
     <ClInclude Include="AISocket.h" />
     <ClInclude Include="db_resources.h" />
     <ClInclude Include="Define.h" />
