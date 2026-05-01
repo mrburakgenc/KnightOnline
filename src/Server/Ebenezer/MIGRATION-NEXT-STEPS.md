@@ -1,7 +1,7 @@
 # Ebenezer VSA Migration — Next-Steps Handoff
 
 **Branch:** `arch/ebenezer-vsa-migration`
-**Last commit checked in:** Phase 3.11 — Object Events (this commit).
+**Last commit checked in:** `2c1795c2` (Phase 3.11 — Object Events).
 **Remote:** `origin/arch/ebenezer-vsa-migration` is up to date.
 
 This document is the resume point for future sessions (any agent, any human). Read this **before** `ARCHITECTURE.md` and `MIGRATION-INVENTORY.md`; those are the contract and the catalog, this is the bookmark.
@@ -25,7 +25,7 @@ This document is the resume point for future sessions (any agent, any human). Re
 | 8 | `features/leveling/`           | Service-only   | `103b1ee5`   | Owns `ExpChange` + `LevelChange`; CUser methods are forwarders. |
 | 9 | `features/stats/`              | Router-bound   | `fa4362fe`   | Binds `WIZ_POINT_CHANGE` + `WIZ_SKILLPT_CHANGE` (stat / skill alloc). |
 | 10 | `features/party/`             | Router-bound   | `7d69ee45`   | Binds `WIZ_PARTY` (create/permit/insert/remove/delete dispatcher). |
-| 11 | `features/object-events/`     | Router-bound   | (this commit)| Binds `WIZ_OBJECT_EVENT` (bind altar / gate-lever / flag / warp / anvil). |
+| 11 | `features/object-events/`     | Router-bound   | `2c1795c2`   | Binds `WIZ_OBJECT_EVENT` (bind altar / gate-lever / flag / warp / anvil). |
 
 ### Shared infrastructure (Phase 2, ready for use)
 
