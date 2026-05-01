@@ -5656,191 +5656,31 @@ void CUser::StateChange(char* pBuf)
 	m_pMain->Send_Region(sendBuffer, sendIndex, m_pUserData->m_bZone, m_RegionX, m_RegionZ);
 }
 
+// VSA migration: actual logic moved to features/loyalty/handlers/LoyaltyService.
+// Kept as forwarders so combat / event call sites compile unchanged.
 void CUser::LoyaltyChange(int targetId)
 {
-	int16_t level_difference = 0, loyalty_source = 0, loyalty_target = 0;
-	int sendIndex = 0;
-	char sendBuffer[256] {};
-
-	auto pTUser = m_pMain->GetUserPtr(targetId);
-
-	// Check if target exists.
-	if (pTUser == nullptr)
-		return;
-
-	// Different nations!!!
-	if (pTUser->m_pUserData->m_bNation != m_pUserData->m_bNation)
-	{
-		// Calculate difference!
-		level_difference = pTUser->m_pUserData->m_bLevel - m_pUserData->m_bLevel;
-
-		// No cheats allowed...
-		if (pTUser->m_pUserData->m_iLoyalty <= 0)
-		{
-			loyalty_source = 0;
-			loyalty_target = 0;
-		}
-		// Target at least six levels lower...
-		else if (level_difference > 5)
-		{
-			loyalty_source = 50;
-			loyalty_target = -25;
-		}
-		// Target at least six levels higher...
-		else if (level_difference < -5)
-		{
-			loyalty_source = 10;
-			loyalty_target = -5;
-		}
-		// Target within the 5 and -5 range...
-		else
-		{
-			loyalty_source = 30;
-			loyalty_target = -15;
-		}
-	}
-	// Same Nations!!!
-	else
-	{
-		if (pTUser->m_pUserData->m_iLoyalty >= 0)
-		{
-			loyalty_source = -1000;
-			loyalty_target = -15;
-		}
-		else
-		{
-			loyalty_source = 100;
-			loyalty_target = -15;
-		}
-	}
-
-	if (m_pUserData->m_bZone != m_pUserData->m_bNation && m_pUserData->m_bZone < 3)
-		loyalty_source = 2 * loyalty_source;
-
-	//TRACE(_T("LoyaltyChange 222 - user1=%hs, %d,, user2=%hs, %d\n"), m_pUserData->m_id,  m_pUserData->m_iLoyalty, pTUser->m_pUserData->m_id, pTUser->m_pUserData->m_iLoyalty);
-
-	CurrencyChange(m_pUserData->m_iLoyalty, loyalty_source);
-	CurrencyChange(pTUser->m_pUserData->m_iLoyalty, loyalty_target);
-
-	//TRACE(_T("LoyaltyChange 222 - user1=%hs, %d,, user2=%hs, %d\n"), m_pUserData->m_id,  m_pUserData->m_iLoyalty, pTUser->m_pUserData->m_id, pTUser->m_pUserData->m_iLoyalty);
-
-	SetByte(sendBuffer, WIZ_LOYALTY_CHANGE, sendIndex); // Send result to source.
-	SetDWORD(sendBuffer, m_pUserData->m_iLoyalty, sendIndex);
-	Send(sendBuffer, sendIndex);
-
-	// Send result to target.
-	memset(sendBuffer, 0, sizeof(sendBuffer));
-	sendIndex = 0;
-	SetByte(sendBuffer, WIZ_LOYALTY_CHANGE, sendIndex);
-	SetDWORD(sendBuffer, pTUser->m_pUserData->m_iLoyalty, sendIndex);
-	pTUser->Send(sendBuffer, sendIndex);
-
-	// This is for the Event Battle on Wednesday :(
-	if (m_pMain->m_byBattleOpen != 0)
-	{
-		if (m_pUserData->m_bZone == ZONE_BATTLE
-			// || m_pUserData->m_bZone == ZONE_SNOW_BATTLE
-		)
-		{
-			if (pTUser->m_pUserData->m_bNation == NATION_KARUS)
-			{
-				++m_pMain->m_sKarusDead;
-				//TRACE(_T("++ LoyaltyChange - ka=%d, el=%d\n"), m_pMain->m_sKarusDead, m_pMain->m_sElmoradDead);
-			}
-			else if (pTUser->m_pUserData->m_bNation == NATION_ELMORAD)
-			{
-				++m_pMain->m_sElmoradDead;
-				//TRACE(_T("++ LoyaltyChange - ka=%d, el=%d\n"), m_pMain->m_sKarusDead, m_pMain->m_sElmoradDead);
-			}
-		}
-	}
-	//
+	if (m_pMain != nullptr)
+		m_pMain->m_LoyaltyService.Grant(*this, targetId);
 }
 
 void CUser::ChangeLoyalty(const int loyaltyChange, const bool isExcludeMonthly)
 {
-	if (m_pUserData->m_bZone == ZONE_ARENA)
-	{
-		return;
-	}
-
-	CurrencyChange(m_pUserData->m_iLoyalty, loyaltyChange);
-	if (!isExcludeMonthly)
-		CurrencyChange(m_pUserData->m_iLoyaltyMonthly, loyaltyChange);
-
-	char sendBuff[256] {};
-	int sendIndex = 0;
-	SetByte(sendBuff, WIZ_LOYALTY_CHANGE, sendIndex);
-	SetByte(sendBuff, LOYALTY_CHANGE_NATIONAL, sendIndex);
-	SetInt(sendBuff, m_pUserData->m_iLoyalty, sendIndex);
-	SetInt(sendBuff, m_pUserData->m_iLoyaltyMonthly, sendIndex);
-	Send(sendBuff, sendIndex);
+	if (m_pMain != nullptr)
+		m_pMain->m_LoyaltyService.Adjust(*this, loyaltyChange, isExcludeMonthly);
 }
 
 bool CUser::CheckManner(const int32_t min, const int32_t max) const
 {
-	return m_pUserData->m_iMannerPoint >= min && m_pUserData->m_iMannerPoint <= max;
+	if (m_pMain == nullptr)
+		return false;
+	return m_pMain->m_LoyaltyService.CheckManner(*this, min, max);
 }
 
 void CUser::ChangeMannerPoint(const int loyaltyAmount)
 {
-	static constexpr uint8_t MANNER_LEVEL_BAND_1    = 20;
-	static constexpr uint8_t MANNER_LEVEL_BAND_2    = 30;
-	static constexpr uint8_t MANNER_LEVEL_BAND_3    = 40;
-	static constexpr uint8_t MIN_MANNER_POINT_LEVEL = 35;
-	static constexpr float MANNER_POINT_RANGE       = 50;
-
-	if (loyaltyAmount > 0)
-	{
-		CurrencyChange(m_pUserData->m_iMannerPoint, loyaltyAmount);
-
-		char sendBuff[128] {};
-		int sendIndex = 0;
-		SetByte(sendBuff, WIZ_LOYALTY_CHANGE, sendIndex);
-		SetByte(sendBuff, LOYALTY_CHANGE_MANNER, sendIndex);
-		SetInt(sendBuff, m_pUserData->m_iMannerPoint, sendIndex);
-		Send(sendBuff, sendIndex);
-	}
-	else if (m_bIsChicken && m_sPartyIndex != -1)
-	{
-		_PARTY_GROUP* userParty = m_pMain->m_PartyMap.GetData(m_sPartyIndex);
-		if (userParty == nullptr)
-			return;
-
-		uint8_t partyPointChange = 0;
-		if (m_pUserData->m_bLevel <= MANNER_LEVEL_BAND_1)
-			partyPointChange = 1;
-		else if (m_pUserData->m_bLevel <= MANNER_LEVEL_BAND_2)
-			partyPointChange = 2;
-		else if (m_pUserData->m_bLevel <= MANNER_LEVEL_BAND_3)
-			partyPointChange = 3;
-
-		for (int i = 0; i < MAX_PARTY_SIZE; i++)
-		{
-			if (userParty->userSocketIds[i] < 0)
-				continue;
-
-			std::shared_ptr<CUser> partyMember = m_pMain->GetUserPtr(userParty->userSocketIds[i]);
-			if (partyMember == nullptr || partyMember->m_bResHpType == USER_DEAD
-				|| partyMember->m_bIsChicken
-				|| partyMember->m_pUserData->m_bLevel < MIN_MANNER_POINT_LEVEL)
-				continue;
-
-			float distance = GetDistance2D(
-				partyMember->m_pUserData->m_curx, partyMember->m_pUserData->m_curz);
-			if (distance > MANNER_POINT_RANGE)
-				continue;
-
-			CurrencyChange(partyMember->m_pUserData->m_iMannerPoint, partyPointChange);
-
-			char sendBuff[128] {};
-			int sendIndex = 0;
-			SetByte(sendBuff, WIZ_LOYALTY_CHANGE, sendIndex);
-			SetByte(sendBuff, LOYALTY_CHANGE_MANNER, sendIndex);
-			SetInt(sendBuff, m_pUserData->m_iMannerPoint, sendIndex);
-			Send(sendBuff, sendIndex);
-		}
-	}
+	if (m_pMain != nullptr)
+		m_pMain->m_LoyaltyService.AdjustManner(*this, loyaltyAmount);
 }
 
 void CUser::SpeedHackUser()
