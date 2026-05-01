@@ -561,13 +561,8 @@ void CUser::Parsing(int len, char* pData)
 			AllCharInfoToAgent();
 			break;
 
-		case WIZ_CHAT:
-			Chat(pData + index);
-			break;
-
-		case WIZ_CHAT_TARGET:
-			ChatTargetSelect(pData + index);
-			break;
+		// WIZ_CHAT and WIZ_CHAT_TARGET are now handled by features/chat/
+		// via PacketRouter — see Features::Chat::ChatModule::Register.
 
 		case WIZ_REGENE:
 			InitType3(); // Init Type 3.....
@@ -2134,109 +2129,8 @@ void CUser::SendMyInfo(int type)
 	//	}
 }
 
-void CUser::Chat(char* pBuf)
-{
-	int index = 0, chatlen = 0, sendIndex = 0;
-	uint8_t type = 0;
-	std::shared_ptr<CUser> pUser;
-	char chatstr[1024] {}, sendBuffer[1024] {};
-	std::string finalstr;
-
-	// this user refused chatting
-	if (m_pUserData->m_bAuthority == AUTHORITY_NOCHAT)
-		return;
-
-	type    = GetByte(pBuf, index);
-	chatlen = GetShort(pBuf, index);
-	if (chatlen > 512 || chatlen <= 0)
-		return;
-
-	GetString(chatstr, pBuf, chatlen, index);
-
-	if (m_pUserData->m_bAuthority == AUTHORITY_MANAGER && chatstr[0] == '+')
-	{
-		OperationMessage opMessage(m_pMain, this);
-		opMessage.Process(chatstr);
-		return;
-	}
-
-	if (type == PUBLIC_CHAT || type == ANNOUNCEMENT_CHAT)
-	{
-		if (m_pUserData->m_bAuthority != AUTHORITY_MANAGER)
-			return;
-
-		finalstr = fmt::format_db_resource(IDP_ANNOUNCEMENT, chatstr);
-	}
-	else
-	{
-		finalstr.assign(chatstr, chatlen);
-	}
-
-	SetByte(sendBuffer, WIZ_CHAT, sendIndex);
-	SetByte(sendBuffer, type, sendIndex);
-	SetByte(sendBuffer, m_pUserData->m_bNation, sendIndex);
-	SetShort(sendBuffer, _socketId, sendIndex);
-	SetString1(sendBuffer, m_pUserData->m_id, sendIndex);
-	SetString2(sendBuffer, finalstr, sendIndex);
-
-	switch (type)
-	{
-		case GENERAL_CHAT:
-			m_pMain->Send_NearRegion(sendBuffer, sendIndex, (int) m_pUserData->m_bZone, m_RegionX,
-				m_RegionZ, m_pUserData->m_curx, m_pUserData->m_curz);
-			break;
-
-		case PRIVATE_CHAT:
-			// 이건 내가 추가했지롱 :P
-			if (m_sPrivateChatUser == _socketId)
-				break;
-
-			pUser = m_pMain->GetUserPtr(m_sPrivateChatUser);
-			if (pUser == nullptr || pUser->GetState() != CONNECTION_STATE_GAMESTART)
-				break;
-
-			pUser->Send(sendBuffer, sendIndex);
-			Send(sendBuffer, sendIndex);
-			break;
-
-		case PARTY_CHAT:
-			m_pMain->Send_PartyMember(m_sPartyIndex, sendBuffer, sendIndex);
-			break;
-
-		case SHOUT_CHAT:
-			if (m_pUserData->m_sMp < (m_iMaxMp / 5))
-				break;
-
-			MSpChange(-(m_iMaxMp / 5));
-			m_pMain->Send_Region(sendBuffer, sendIndex, (int) m_pUserData->m_bZone, m_RegionX,
-				m_RegionZ, nullptr, false);
-			break;
-
-		case KNIGHTS_CHAT:
-			m_pMain->Send_KnightsMember(
-				m_pUserData->m_bKnights, sendBuffer, sendIndex, m_pUserData->m_bZone);
-			break;
-
-		case PUBLIC_CHAT:
-			m_pMain->Send_All(sendBuffer, sendIndex);
-			break;
-
-		case COMMAND_CHAT:
-			if (m_pUserData->m_bFame == KNIGHTS_DUTY_CAPTAIN) // 지휘권자만 채팅이 되도록
-				m_pMain->Send_CommandChat(sendBuffer, sendIndex, m_pUserData->m_bNation, this);
-			break;
-
-			//case WAR_SYSTEM_CHAT:
-			//	m_pMain->Send_All( sendBuffer, sendIndex );
-			//	break;
-
-		default:
-			spdlog::error(
-				"User::Chat: Unhandled chat type {:02X} [accountName={} characterName={}]", type,
-				m_strAccountID, m_pUserData->m_id);
-			break;
-	}
-}
+// VSA migration: CUser::Chat lifted to features/chat/handlers/ChatService.
+// Bound on PacketRouter via Features::Chat::ChatModule::Register at startup.
 
 void CUser::SetMaxHp(int iFlag)
 {
@@ -7365,37 +7259,7 @@ bool CUser::ItemEquipAvailable(const model::Item* pTable) const
 	return true;
 }
 
-void CUser::ChatTargetSelect(char* pBuf)
-{
-	int index = 0, sendIndex = 0, idlen = 0;
-	char chatid[MAX_ID_SIZE + 1] {}, sendBuffer[128] {};
-
-	idlen = GetShort(pBuf, index);
-	if (idlen > MAX_ID_SIZE || idlen < 0)
-		return;
-
-	GetString(chatid, pBuf, idlen, index);
-
-	int socketCount = m_pMain->GetUserSocketCount();
-	int i           = 0;
-	for (; i < socketCount; i++)
-	{
-		auto pUser = m_pMain->GetUserPtrUnchecked(i);
-		if (pUser != nullptr && pUser->GetState() == CONNECTION_STATE_GAMESTART
-			&& strnicmp(chatid, pUser->m_pUserData->m_id, MAX_ID_SIZE) == 0)
-		{
-			m_sPrivateChatUser = i;
-			break;
-		}
-	}
-
-	SetByte(sendBuffer, WIZ_CHAT_TARGET, sendIndex);
-	if (i == socketCount)
-		SetShort(sendBuffer, 0, sendIndex);
-	else
-		SetString2(sendBuffer, chatid, sendIndex);
-	Send(sendBuffer, sendIndex);
-}
+// VSA migration: CUser::ChatTargetSelect lifted to features/chat/handlers/ChatService.
 
 // AI server에 User정보를 전부 전송...
 void CUser::SendUserInfo(char* temp_send, int& index)

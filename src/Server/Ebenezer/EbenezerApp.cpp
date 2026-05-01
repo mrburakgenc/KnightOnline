@@ -22,6 +22,8 @@
 
 #include <Ebenezer/binder/EbenezerBinder.h>
 
+#include <Ebenezer/features/chat/ChatModule.h>
+
 #include <fstream>
 #include <ranges>
 
@@ -327,6 +329,14 @@ bool EbenezerApp::OnStart()
 		// Non-fatal — gameplay can proceed with default (no-king) state.
 		spdlog::warn("EbenezerApp::OnStart: KING_SYSTEM hydration failed; continuing with defaults");
 	}
+
+	// VSA migration: register every migrated feature's packet handlers
+	// with m_PacketRouter. Each module owns the Bind() calls for its
+	// opcodes; new feature slices add a Register call here.
+	spdlog::info("EbenezerApp::OnStart: registering migrated feature modules");
+	Features::Chat::ChatModule::Register(m_PacketRouter, m_ChatService);
+	spdlog::info("EbenezerApp::OnStart: PacketRouter has {} bound opcode(s)",
+		m_PacketRouter.BoundCount());
 
 	spdlog::info("EbenezerApp::OnStart: loading ITEM_UPGRADE table");
 	if (!LoadItemUpgradeTable())

@@ -508,7 +508,7 @@ public:
 	void UserDataSaveToAgent();
 	void CountConcurrentUser();
 	void SendUserInfo(char* temp_send, int& index);
-	void ChatTargetSelect(char* pBuf);
+	// VSA migration: WIZ_CHAT_TARGET migrated to features/chat/ slice.
 	bool ItemEquipAvailable(const model::Item* pTable) const;
 	void ClassChange(char* pBuf);
 
@@ -595,7 +595,7 @@ public:
 	void SetMaxMp();
 	void SetMaxHp(int iFlag = 0); // 0:default, 1:hp를 maxhp만큼 채워주기
 	void ExpChange(int iExp);
-	void Chat(char* pBuf);
+	// VSA migration: WIZ_CHAT migrated to features/chat/ slice.
 	void LogOut();
 	void SelCharToAgent(char* pBuf);
 	void SendMyInfo(int type);

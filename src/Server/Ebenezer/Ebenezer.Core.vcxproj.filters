@@ -45,6 +45,12 @@
     <Filter Include="features\gold\handlers">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555507}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\chat">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555508}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\chat\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555509}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -130,6 +136,12 @@
     </ClCompile>
     <ClCompile Include="features\gold\handlers\GoldService.cpp">
       <Filter>features\gold\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\chat\handlers\ChatService.cpp">
+      <Filter>features\chat\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\chat\ChatModule.cpp">
+      <Filter>features\chat</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -243,6 +255,12 @@
     </ClInclude>
     <ClInclude Include="features\gold\handlers\GoldService.h">
       <Filter>features\gold\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\chat\handlers\ChatService.h">
+      <Filter>features\chat\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\chat\ChatModule.h">
+      <Filter>features\chat</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
