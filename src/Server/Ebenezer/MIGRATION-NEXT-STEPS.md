@@ -1,7 +1,7 @@
 # Ebenezer VSA Migration — Next-Steps Handoff
 
 **Branch:** `arch/ebenezer-vsa-migration`
-**Last commit checked in:** Phase 3.13 — Warehouse (this commit).
+**Last commit checked in:** `9fd8afe8` (Phase 3.13 — Warehouse).
 **Remote:** `origin/arch/ebenezer-vsa-migration` is up to date.
 
 This document is the resume point for future sessions (any agent, any human). Read this **before** `ARCHITECTURE.md` and `MIGRATION-INVENTORY.md`; those are the contract and the catalog, this is the bookmark.
@@ -27,7 +27,7 @@ This document is the resume point for future sessions (any agent, any human). Re
 | 10 | `features/party/`             | Router-bound   | `7d69ee45`   | Binds `WIZ_PARTY` (create/permit/insert/remove/delete dispatcher). |
 | 11 | `features/object-events/`     | Router-bound   | `2c1795c2`   | Binds `WIZ_OBJECT_EVENT` (bind altar / gate-lever / flag / warp / anvil). |
 | 12 | `features/item-upgrade/`      | Router-bound   | `f676442a`   | Binds `WIZ_ITEM_UPGRADE` (anvil weapon / accessory upgrade dispatcher). |
-| 13 | `features/warehouse/`         | Router-bound   | (this commit)| Binds `WIZ_WAREHOUSE` (per-account bank — body remains on CUser::WarehouseProcess). |
+| 13 | `features/warehouse/`         | Router-bound   | `9fd8afe8`   | Binds `WIZ_WAREHOUSE` (per-account bank — body remains on CUser::WarehouseProcess). |
 
 ### Shared infrastructure (Phase 2, ready for use)
 
