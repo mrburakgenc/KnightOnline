@@ -1,7 +1,7 @@
 # Ebenezer VSA Migration — Next-Steps Handoff
 
 **Branch:** `arch/ebenezer-vsa-migration`
-**Last commit checked in:** Phase 3.4 — Item Repair (this commit).
+**Last commit checked in:** `ec7b64d2` (Phase 3.4 — Item Repair).
 **Remote:** `origin/arch/ebenezer-vsa-migration` is up to date.
 
 This document is the resume point for future sessions (any agent, any human). Read this **before** `ARCHITECTURE.md` and `MIGRATION-INVENTORY.md`; those are the contract and the catalog, this is the bookmark.
@@ -18,7 +18,7 @@ This document is the resume point for future sessions (any agent, any human). Re
 | 1 | `features/gold/`               | Service-only   | `0083301c`   | `CUser::GoldGain` / `GoldLose` are 2-line forwarders.        |
 | 2 | `features/chat/`               | Router-bound   | `60404a42`   | Binds `WIZ_CHAT` (0x10) and `WIZ_CHAT_TARGET` (0x11).        |
 | 3 | `features/loyalty/`            | Service-only   | `43e1692c`   | NP + Manner + chicken-party distribution preserved verbatim. |
-| 4 | `features/item-repair/`        | Router-bound   | (this commit)| Binds `WIZ_ITEM_REPAIR` (NPC blacksmith durability repair). |
+| 4 | `features/item-repair/`        | Router-bound   | `ec7b64d2`   | Binds `WIZ_ITEM_REPAIR` (NPC blacksmith durability repair). |
 
 ### Shared infrastructure (Phase 2, ready for use)
 
