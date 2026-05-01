@@ -12313,58 +12313,21 @@ void CUser::SendItemWeight()
 	Send(sendBuffer, sendIndex);
 }
 
+// VSA migration: actual gold logic lives in features/gold/handlers/GoldService.
+// These two methods stay as forwarders so the ~13 existing call sites
+// (NPC sale, item upgrade, respec, royal reward, exec scripts, party loot)
+// keep compiling unchanged.
 void CUser::GoldGain(int amount)
 {
-	int sendIndex = 0;
-	char sendBuffer[256] {};
-
-	if (m_pUserData->m_iGold < 0)
-	{
-		spdlog::error("User::GoldGain: user has negative gold [charId={} existingGold={}]",
-			m_pUserData->m_id, m_pUserData->m_iGold);
-		return;
-	}
-
-	if (amount < MIN_CURRENCY)
-		amount = MIN_CURRENCY;
-
-	CurrencyChange(m_pUserData->m_iGold, amount);
-
-	SetByte(sendBuffer, WIZ_GOLD_CHANGE, sendIndex);
-	SetByte(sendBuffer, GOLD_CHANGE_GAIN, sendIndex);
-	SetDWORD(sendBuffer, amount, sendIndex);
-	SetDWORD(sendBuffer, m_pUserData->m_iGold, sendIndex);
-	Send(sendBuffer, sendIndex);
+	if (m_pMain != nullptr)
+		m_pMain->m_GoldService.Gain(*this, amount);
 }
 
 bool CUser::GoldLose(int amount)
 {
-	int sendIndex = 0;
-	char sendBuffer[256] {};
-
-	if (m_pUserData->m_iGold < 0)
-	{
-		spdlog::error("User::GoldLose: user has negative gold [charId={} existingGold={}]",
-			m_pUserData->m_id, m_pUserData->m_iGold);
+	if (m_pMain == nullptr)
 		return false;
-	}
-
-	if (amount < MIN_CURRENCY)
-		amount = MIN_CURRENCY;
-
-	// Insufficient gold!
-	if (m_pUserData->m_iGold < amount)
-		return false;
-
-	CurrencyChange(m_pUserData->m_iGold, -amount);
-
-	SetByte(sendBuffer, WIZ_GOLD_CHANGE, sendIndex);
-	SetByte(sendBuffer, GOLD_CHANGE_LOSE, sendIndex);
-	SetDWORD(sendBuffer, amount, sendIndex);
-	SetDWORD(sendBuffer, m_pUserData->m_iGold, sendIndex);
-	Send(sendBuffer, sendIndex);
-
-	return true;
+	return m_pMain->m_GoldService.Lose(*this, amount);
 }
 
 bool CUser::CheckSkillPoint(uint8_t skillnum, uint8_t min, uint8_t max) const

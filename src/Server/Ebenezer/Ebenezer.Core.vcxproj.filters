@@ -36,6 +36,15 @@
     <Filter Include="features\king-system\persistence">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555504}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\gold">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555505}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\gold\domain">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555506}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\gold\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555507}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -118,6 +127,9 @@
     </ClCompile>
     <ClCompile Include="features\king-system\persistence\KingSystemRepository.cpp">
       <Filter>features\king-system\persistence</Filter>
+    </ClCompile>
+    <ClCompile Include="features\gold\handlers\GoldService.cpp">
+      <Filter>features\gold\handlers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -225,6 +237,12 @@
     </ClInclude>
     <ClInclude Include="features\king-system\persistence\KingSystemRepository.h">
       <Filter>features\king-system\persistence</Filter>
+    </ClInclude>
+    <ClInclude Include="features\gold\domain\GoldBalance.h">
+      <Filter>features\gold\domain</Filter>
+    </ClInclude>
+    <ClInclude Include="features\gold\handlers\GoldService.h">
+      <Filter>features\gold\handlers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -18,6 +18,7 @@
 
 #include <Ebenezer/shared/infrastructure/network/PacketRouter.h>
 #include <Ebenezer/shared/infrastructure/tick/TickScheduler.h>
+#include <Ebenezer/features/gold/handlers/GoldService.h>
 
 #include <shared/Ini.h>
 #include <shared-server/AppThread.h>
@@ -288,6 +289,11 @@ public:
 	// for the migration plan.
 	Shared::Network::PacketRouter m_PacketRouter;
 	Shared::Tick::TickScheduler   m_TickScheduler;
+
+	// Migrated feature services. CUser proxies its old gold methods to
+	// these so existing callers compile unchanged while the slice owns
+	// the actual logic.
+	Features::Gold::GoldService   m_GoldService;
 
 	int16_t m_sPartyIndex;
 	int16_t m_sZoneCount;   // AI Server 재접속시 사용
