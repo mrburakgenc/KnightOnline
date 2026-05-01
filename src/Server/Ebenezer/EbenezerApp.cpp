@@ -25,6 +25,7 @@
 #include <Ebenezer/features/chat/ChatModule.h>
 #include <Ebenezer/features/home/HomeModule.h>
 #include <Ebenezer/features/item-repair/ItemRepairModule.h>
+#include <Ebenezer/features/party-bbs/PartyBbsModule.h>
 #include <Ebenezer/features/promotion/PromotionModule.h>
 
 #include <fstream>
@@ -340,6 +341,7 @@ bool EbenezerApp::OnStart()
 	Features::Chat::ChatModule::Register(m_PacketRouter, m_ChatService);
 	Features::Home::HomeModule::Register(m_PacketRouter, m_HomeService);
 	Features::ItemRepair::ItemRepairModule::Register(m_PacketRouter, m_ItemRepairService);
+	Features::PartyBbs::PartyBbsModule::Register(m_PacketRouter, m_PartyBbsService);
 	Features::Promotion::PromotionModule::Register(m_PacketRouter, m_PromotionService);
 	spdlog::info("EbenezerApp::OnStart: PacketRouter has {} bound opcode(s)",
 		m_PacketRouter.BoundCount());

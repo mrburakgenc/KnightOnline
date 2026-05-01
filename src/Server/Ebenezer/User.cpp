@@ -711,10 +711,6 @@ void CUser::Parsing(int len, char* pData)
 			ServerChangeOk(pData + index);
 			break;
 
-		case WIZ_PARTY_BBS:
-			PartyBBS(pData + index);
-			break;
-
 		case WIZ_MARKET_BBS:
 			MarketBBS(pData + index);
 			break;
@@ -9981,38 +9977,6 @@ void CUser::Corpse()
 	SetShort(sendBuffer, _socketId, sendIndex);
 	m_pMain->Send_Region(
 		sendBuffer, sendIndex, m_pUserData->m_bZone, m_RegionX, m_RegionZ, nullptr, false);
-}
-
-void CUser::PartyBBS(char* pBuf)
-{
-	int index          = 0;
-	uint8_t subcommand = GetByte(pBuf, index);
-	switch (subcommand)
-	{
-		// When you register a message on the Party BBS.
-		case PARTY_BBS_REGISTER:
-			PartyBBSRegister(pBuf + index);
-			break;
-
-		// When you delete your message on the Party BBS.
-		case PARTY_BBS_DELETE:
-			PartyBBSDelete(pBuf + index);
-			break;
-
-		// Get the 'needed' messages from the Party BBS.
-		case PARTY_BBS_NEEDED:
-			PartyBBSNeeded(pBuf + index, PARTY_BBS_NEEDED);
-			break;
-
-		default:
-			spdlog::error("User::PartyBBS: Unhandled opcode {:02X} [characterName={}]", subcommand,
-				m_pUserData->m_id);
-
-#ifndef _DEBUG
-			Close();
-#endif
-			break;
-	}
 }
 
 void CUser::PartyBBSRegister(char* /*pBuf*/)

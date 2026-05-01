@@ -23,6 +23,7 @@
 #include <Ebenezer/features/home/handlers/HomeService.h>
 #include <Ebenezer/features/item-repair/handlers/ItemRepairService.h>
 #include <Ebenezer/features/loyalty/handlers/LoyaltyService.h>
+#include <Ebenezer/features/party-bbs/handlers/PartyBbsService.h>
 #include <Ebenezer/features/promotion/handlers/PromotionService.h>
 
 #include <shared/Ini.h>
@@ -303,6 +304,7 @@ public:
 	Features::Home::HomeService             m_HomeService;
 	Features::ItemRepair::ItemRepairService m_ItemRepairService;
 	Features::Loyalty::LoyaltyService       m_LoyaltyService;
+	Features::PartyBbs::PartyBbsService     m_PartyBbsService;
 	Features::Promotion::PromotionService   m_PromotionService;
 
 	int16_t m_sPartyIndex;

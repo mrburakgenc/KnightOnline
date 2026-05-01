@@ -75,6 +75,12 @@
     <Filter Include="features\home\handlers">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555511}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\party-bbs">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555512}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\party-bbs\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555513}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -187,6 +193,12 @@
     </ClCompile>
     <ClCompile Include="features\home\HomeModule.cpp">
       <Filter>features\home</Filter>
+    </ClCompile>
+    <ClCompile Include="features\party-bbs\handlers\PartyBbsService.cpp">
+      <Filter>features\party-bbs\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\party-bbs\PartyBbsModule.cpp">
+      <Filter>features\party-bbs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -327,6 +339,12 @@
     </ClInclude>
     <ClInclude Include="features\home\HomeModule.h">
       <Filter>features\home</Filter>
+    </ClInclude>
+    <ClInclude Include="features\party-bbs\handlers\PartyBbsService.h">
+      <Filter>features\party-bbs\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\party-bbs\PartyBbsModule.h">
+      <Filter>features\party-bbs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

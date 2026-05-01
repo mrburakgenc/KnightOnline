@@ -436,7 +436,6 @@ public:
 	void PartyBBSNeeded(char* pBuf, uint8_t type);
 	void PartyBBSDelete(char* pBuf);
 	void PartyBBSRegister(char* pBuf);
-	void PartyBBS(char* pBuf);
 	void Corpse();
 	void FriendAccept(char* pBuf);
 	void FriendRequest(char* pBuf);
