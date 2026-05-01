@@ -25,6 +25,7 @@
 #include <Ebenezer/features/chat/ChatModule.h>
 #include <Ebenezer/features/home/HomeModule.h>
 #include <Ebenezer/features/item-repair/ItemRepairModule.h>
+#include <Ebenezer/features/item-upgrade/ItemUpgradeModule.h>
 #include <Ebenezer/features/object-events/ObjectEventsModule.h>
 #include <Ebenezer/features/party-bbs/PartyBbsModule.h>
 #include <Ebenezer/features/party/PartyModule.h>
@@ -344,6 +345,7 @@ bool EbenezerApp::OnStart()
 	Features::Chat::ChatModule::Register(m_PacketRouter, m_ChatService);
 	Features::Home::HomeModule::Register(m_PacketRouter, m_HomeService);
 	Features::ItemRepair::ItemRepairModule::Register(m_PacketRouter, m_ItemRepairService);
+	Features::ItemUpgrade::ItemUpgradeModule::Register(m_PacketRouter, m_ItemUpgradeService);
 	Features::ObjectEvents::ObjectEventsModule::Register(m_PacketRouter, m_ObjectEventsService);
 	Features::PartyBbs::PartyBbsModule::Register(m_PacketRouter, m_PartyBbsService);
 	Features::Party::PartyModule::Register(m_PacketRouter, m_PartyService);

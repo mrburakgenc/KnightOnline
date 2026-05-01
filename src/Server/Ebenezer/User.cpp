@@ -720,10 +720,6 @@ void CUser::Parsing(int len, char* pData)
 			RecvEditBox(pData + index);
 			break;
 
-		case WIZ_ITEM_UPGRADE:
-			ItemUpgradeProcess(pData + index);
-			break;
-
 		default:
 			spdlog::error(
 				"User::Parsing: Unhandled opcode {:02X} [ip={} accountName={} characterName={}]",
@@ -12547,16 +12543,6 @@ void CUser::ResetEditBox()
 {
 	m_iEditBoxEvent = -1;
 	memset(m_strCouponId, 0, sizeof(m_strCouponId));
-}
-
-void CUser::ItemUpgradeProcess(char* pBuf)
-{
-	int index           = 0;
-	uint8_t upgradeType = GetByte(pBuf, index);
-	if (upgradeType == ITEM_UPGRADE_PROCESS)
-		ItemUpgrade(pBuf + index);
-	else if (upgradeType == ITEM_UPGRADE_ACCESSORIES)
-		ItemUpgradeAccesories(pBuf + index);
 }
 
 void CUser::ItemUpgrade(char* pBuf)

@@ -296,7 +296,6 @@ public:
 	void LogCoupon(int itemid, int count);
 	void RecvEditBox(char* pBuf);
 	void ResetEditBox();
-	void ItemUpgradeProcess(char* pBuf);
 	void ItemUpgrade(char* pBuf);
 	void ItemUpgradeAccesories(char* pBuf);
 	void SendItemUpgradeFailed(e_ItemUpgradeResult resultCode);

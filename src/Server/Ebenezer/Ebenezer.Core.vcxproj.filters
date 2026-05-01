@@ -105,6 +105,12 @@
     <Filter Include="features\object-events\handlers">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555551B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\item-upgrade">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555551C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\item-upgrade\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555551D}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -244,6 +250,12 @@
     </ClCompile>
     <ClCompile Include="features\object-events\ObjectEventsModule.cpp">
       <Filter>features\object-events</Filter>
+    </ClCompile>
+    <ClCompile Include="features\item-upgrade\handlers\ItemUpgradeService.cpp">
+      <Filter>features\item-upgrade\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\item-upgrade\ItemUpgradeModule.cpp">
+      <Filter>features\item-upgrade</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -411,6 +423,12 @@
     </ClInclude>
     <ClInclude Include="features\object-events\ObjectEventsModule.h">
       <Filter>features\object-events</Filter>
+    </ClInclude>
+    <ClInclude Include="features\item-upgrade\handlers\ItemUpgradeService.h">
+      <Filter>features\item-upgrade\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\item-upgrade\ItemUpgradeModule.h">
+      <Filter>features\item-upgrade</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

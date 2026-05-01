@@ -191,6 +191,8 @@
     <ClCompile Include="features\home\HomeModule.cpp" />
     <ClCompile Include="features\item-repair\handlers\ItemRepairService.cpp" />
     <ClCompile Include="features\item-repair\ItemRepairModule.cpp" />
+    <ClCompile Include="features\item-upgrade\handlers\ItemUpgradeService.cpp" />
+    <ClCompile Include="features\item-upgrade\ItemUpgradeModule.cpp" />
     <ClCompile Include="features\leveling\handlers\LevelingService.cpp" />
     <ClCompile Include="features\loyalty\handlers\LoyaltyService.cpp" />
     <ClCompile Include="features\object-events\handlers\ObjectEventsService.cpp" />
@@ -220,6 +222,8 @@
     <ClInclude Include="features\home\HomeModule.h" />
     <ClInclude Include="features\item-repair\handlers\ItemRepairService.h" />
     <ClInclude Include="features\item-repair\ItemRepairModule.h" />
+    <ClInclude Include="features\item-upgrade\handlers\ItemUpgradeService.h" />
+    <ClInclude Include="features\item-upgrade\ItemUpgradeModule.h" />
     <ClInclude Include="features\leveling\handlers\LevelingService.h" />
     <ClInclude Include="features\loyalty\handlers\LoyaltyService.h" />
     <ClInclude Include="features\object-events\handlers\ObjectEventsService.h" />
