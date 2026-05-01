@@ -564,12 +564,6 @@ void CUser::Parsing(int len, char* pData)
 		// WIZ_CHAT and WIZ_CHAT_TARGET are now handled by features/chat/
 		// via PacketRouter — see Features::Chat::ChatModule::Register.
 
-		case WIZ_REGENE:
-			InitType3(); // Init Type 3.....
-			InitType4(); // Init Type 4.....
-			Regene(pData + index);
-			break;
-
 		case WIZ_REQ_USERIN:
 			RequestUserIn(pData + index);
 			break;
@@ -695,10 +689,6 @@ void CUser::Parsing(int len, char* pData)
 
 		case WIZ_REPORT_BUG:
 			ReportBug(pData + index);
-			break;
-
-		case WIZ_HOME:
-			Home();
 			break;
 
 		case WIZ_FRIEND_PROCESS:

@@ -20,6 +20,7 @@
 #include <Ebenezer/shared/infrastructure/tick/TickScheduler.h>
 #include <Ebenezer/features/gold/handlers/GoldService.h>
 #include <Ebenezer/features/chat/handlers/ChatService.h>
+#include <Ebenezer/features/home/handlers/HomeService.h>
 #include <Ebenezer/features/item-repair/handlers/ItemRepairService.h>
 #include <Ebenezer/features/loyalty/handlers/LoyaltyService.h>
 #include <Ebenezer/features/promotion/handlers/PromotionService.h>
@@ -299,6 +300,7 @@ public:
 	// the actual logic. Chat is router-bound so it has no proxy.
 	Features::Gold::GoldService             m_GoldService;
 	Features::Chat::ChatService             m_ChatService;
+	Features::Home::HomeService             m_HomeService;
 	Features::ItemRepair::ItemRepairService m_ItemRepairService;
 	Features::Loyalty::LoyaltyService       m_LoyaltyService;
 	Features::Promotion::PromotionService   m_PromotionService;

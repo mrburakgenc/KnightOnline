@@ -187,6 +187,8 @@
     <ClCompile Include="features\gold\handlers\GoldService.cpp" />
     <ClCompile Include="features\chat\handlers\ChatService.cpp" />
     <ClCompile Include="features\chat\ChatModule.cpp" />
+    <ClCompile Include="features\home\handlers\HomeService.cpp" />
+    <ClCompile Include="features\home\HomeModule.cpp" />
     <ClCompile Include="features\item-repair\handlers\ItemRepairService.cpp" />
     <ClCompile Include="features\item-repair\ItemRepairModule.cpp" />
     <ClCompile Include="features\loyalty\handlers\LoyaltyService.cpp" />
@@ -205,6 +207,8 @@
     <ClInclude Include="features\gold\handlers\GoldService.h" />
     <ClInclude Include="features\chat\handlers\ChatService.h" />
     <ClInclude Include="features\chat\ChatModule.h" />
+    <ClInclude Include="features\home\handlers\HomeService.h" />
+    <ClInclude Include="features\home\HomeModule.h" />
     <ClInclude Include="features\item-repair\handlers\ItemRepairService.h" />
     <ClInclude Include="features\item-repair\ItemRepairModule.h" />
     <ClInclude Include="features\loyalty\handlers\LoyaltyService.h" />

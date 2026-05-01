@@ -1,7 +1,7 @@
 # Ebenezer VSA Migration — Next-Steps Handoff
 
 **Branch:** `arch/ebenezer-vsa-migration`
-**Last commit checked in:** `adff83df` (Phase 3.5 — Promotion).
+**Last commit checked in:** Phase 3.6 — Home (this commit).
 **Remote:** `origin/arch/ebenezer-vsa-migration` is up to date.
 
 This document is the resume point for future sessions (any agent, any human). Read this **before** `ARCHITECTURE.md` and `MIGRATION-INVENTORY.md`; those are the contract and the catalog, this is the bookmark.
@@ -20,10 +20,11 @@ This document is the resume point for future sessions (any agent, any human). Re
 | 3 | `features/loyalty/`            | Service-only   | `43e1692c`   | NP + Manner + chicken-party distribution preserved verbatim. |
 | 4 | `features/item-repair/`        | Router-bound   | `ec7b64d2`   | Binds `WIZ_ITEM_REPAIR` (NPC blacksmith durability repair). |
 | 5 | `features/promotion/`          | Router-bound   | `adff83df`   | Binds `WIZ_CLASS_CHANGE` (lvl-60 promotion + stat/skill respec quote). |
+| 6 | `features/home/`               | Router-bound   | (this commit)| Binds `WIZ_HOME` + `WIZ_REGENE` (bind point + resurrect; CUser::Regene retained for clerical magic). |
 
 ### Shared infrastructure (Phase 2, ready for use)
 
-- `shared/infrastructure/network/PacketRouter` — opcode → handler map. Currently 4 opcodes bound (chat × 2, item-repair, promotion).
+- `shared/infrastructure/network/PacketRouter` — opcode → handler map. Currently 6 opcodes bound (chat × 2, item-repair, promotion, home × 2).
 - `shared/infrastructure/tick/TickScheduler` — periodic-task subscriber. Currently 0 subscriptions.
 - `shared/infrastructure/persistence/SqlHelpers` — `ExecuteSql`, `SqlEscape`. Used by the King System repo.
 
@@ -85,10 +86,9 @@ Each line is a 30-60 minute migration once you have the patterns memorized.
 
 | #  | Slice                      | Pattern | Why next                                                          |
 |----|----------------------------|---------|-------------------------------------------------------------------|
-| 6  | `features/home/`           | Router-bound | `WIZ_HOME` + `WIZ_REGENE` (~280 LOC). Bind point + resurrect. |
 | 7  | `features/party-bbs/`      | Router-bound | `WIZ_PARTY_BBS` (~100 LOC). Group-finder posting.             |
 
-These two (plus item-repair and promotion, already shipped) complete the "low-risk" pass. After that, `User.cpp` should be down to ~13,500 LOC.
+Party-bbs is the last of the "low-risk" pass; item-repair, promotion, and home have already shipped. After that, `User.cpp` should be down to ~13,500 LOC.
 
 ### Phase 3B (medium-risk)
 
@@ -169,6 +169,7 @@ Per-slice gameplay smoke tests (do these in-game with `LeqenDRapToR`):
 | Loyalty        | Kill an enemy nation player → NP increases; check `m_iLoyalty` packet.                 |
 | Item Repair    | Visit blacksmith NPC, repair item.                                                     |
 | Promotion      | Lvl 60 char triggers promotion quest. Respec NPC: ask cost (sub_type 1/2 → quote).      |
+| Home           | `/town` warps to nation start; die → resurrect at bind; cleric Resurrection on a corpse. |
 | Home           | Die → respawn at bind; type `/home` (or whatever the actual binding is).               |
 
 ---
@@ -210,4 +211,4 @@ Per-slice gameplay smoke tests (do these in-game with `LeqenDRapToR`):
 
 ---
 
-Last updated: Phase 3.5 commit (Promotion).
+Last updated: Phase 3.6 commit (Home).

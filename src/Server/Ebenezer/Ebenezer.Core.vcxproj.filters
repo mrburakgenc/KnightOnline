@@ -69,6 +69,12 @@
     <Filter Include="features\promotion\handlers">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555550F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\home">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555510}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\home\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555511}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -175,6 +181,12 @@
     </ClCompile>
     <ClCompile Include="features\promotion\PromotionModule.cpp">
       <Filter>features\promotion</Filter>
+    </ClCompile>
+    <ClCompile Include="features\home\handlers\HomeService.cpp">
+      <Filter>features\home\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\home\HomeModule.cpp">
+      <Filter>features\home</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -309,6 +321,12 @@
     </ClInclude>
     <ClInclude Include="features\promotion\PromotionModule.h">
       <Filter>features\promotion</Filter>
+    </ClInclude>
+    <ClInclude Include="features\home\handlers\HomeService.h">
+      <Filter>features\home\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\home\HomeModule.h">
+      <Filter>features\home</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
