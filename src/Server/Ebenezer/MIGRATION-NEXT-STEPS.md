@@ -1,7 +1,7 @@
 # Ebenezer VSA Migration — Next-Steps Handoff
 
 **Branch:** `arch/ebenezer-vsa-migration`
-**Last commit checked in:** Phase 3.15 — NPC (this commit). Phase 3B (medium-risk) complete.
+**Last commit checked in:** `2c881e6a` (Phase 3.15 — NPC). Phase 3B (medium-risk) complete.
 **Remote:** `origin/arch/ebenezer-vsa-migration` is up to date.
 
 This document is the resume point for future sessions (any agent, any human). Read this **before** `ARCHITECTURE.md` and `MIGRATION-INVENTORY.md`; those are the contract and the catalog, this is the bookmark.
@@ -29,7 +29,7 @@ This document is the resume point for future sessions (any agent, any human). Re
 | 12 | `features/item-upgrade/`      | Router-bound   | `f676442a`   | Binds `WIZ_ITEM_UPGRADE` (anvil weapon / accessory upgrade dispatcher). |
 | 13 | `features/warehouse/`         | Router-bound   | `9fd8afe8`   | Binds `WIZ_WAREHOUSE` (per-account bank — body remains on CUser::WarehouseProcess). |
 | 14 | `features/market-bbs/`        | Router-bound   | `87bd3271`   | Binds `WIZ_MARKET_BBS` (buy/sell board — register / delete / open / report / remote-purchase / message). |
-| 15 | `features/npc/`               | Router-bound   | (this commit)| Binds `WIZ_REQ_NPCIN` + `WIZ_NPC_EVENT` (region NPC list + interaction dispatcher). |
+| 15 | `features/npc/`               | Router-bound   | `2c881e6a`   | Binds `WIZ_REQ_NPCIN` + `WIZ_NPC_EVENT` (region NPC list + interaction dispatcher). |
 
 ### Shared infrastructure (Phase 2, ready for use)
 
