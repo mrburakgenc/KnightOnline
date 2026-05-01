@@ -187,6 +187,8 @@
     <ClCompile Include="features\gold\handlers\GoldService.cpp" />
     <ClCompile Include="features\chat\handlers\ChatService.cpp" />
     <ClCompile Include="features\chat\ChatModule.cpp" />
+    <ClCompile Include="features\item-repair\handlers\ItemRepairService.cpp" />
+    <ClCompile Include="features\item-repair\ItemRepairModule.cpp" />
     <ClCompile Include="features\loyalty\handlers\LoyaltyService.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -201,6 +203,8 @@
     <ClInclude Include="features\gold\handlers\GoldService.h" />
     <ClInclude Include="features\chat\handlers\ChatService.h" />
     <ClInclude Include="features\chat\ChatModule.h" />
+    <ClInclude Include="features\item-repair\handlers\ItemRepairService.h" />
+    <ClInclude Include="features\item-repair\ItemRepairModule.h" />
     <ClInclude Include="features\loyalty\handlers\LoyaltyService.h" />
     <ClInclude Include="AISocket.h" />
     <ClInclude Include="db_resources.h" />

@@ -668,10 +668,6 @@ void CUser::Parsing(int len, char* pData)
 			UserDataSaveToAgent();
 			break;
 
-		case WIZ_ITEM_REPAIR:
-			ItemRepair(pData + index);
-			break;
-
 		case WIZ_KNIGHTS_PROCESS:
 			m_pMain->m_KnightsManager.PacketProcess(this, pData + index);
 			break;
@@ -7768,74 +7764,6 @@ void CUser::HPTimeChangeType3(double currentTime)
 	}
 	//  end of Send Party Packet.....  //
 	//
-}
-
-void CUser::ItemRepair(char* pBuf)
-{
-	int index = 0, sendIndex = 0, money = 0, quantity = 0;
-	int itemid = 0, pos = 0, slot = -1, durability = 0;
-	model::Item* pTable = nullptr;
-	char sendBuffer[128] {};
-
-	pos    = GetByte(pBuf, index);
-	slot   = GetByte(pBuf, index);
-	itemid = GetDWORD(pBuf, index);
-
-	// SLOT
-	if (pos == 1)
-	{
-		if (slot >= SLOT_MAX)
-			goto fail_return;
-
-		if (m_pUserData->m_sItemArray[slot].nNum != itemid)
-			goto fail_return;
-	}
-	// INVEN
-	else if (pos == 2)
-	{
-		if (slot >= HAVE_MAX)
-			goto fail_return;
-
-		if (m_pUserData->m_sItemArray[SLOT_MAX + slot].nNum != itemid)
-			goto fail_return;
-	}
-
-	pTable = m_pMain->m_ItemTableMap.GetData(itemid);
-	if (pTable == nullptr)
-		goto fail_return;
-
-	durability = pTable->Durability;
-
-	if (durability == 1)
-		goto fail_return;
-
-	if (pos == 1)
-		quantity = pTable->Durability - m_pUserData->m_sItemArray[slot].sDuration;
-	else if (pos == 2)
-		quantity = pTable->Durability - m_pUserData->m_sItemArray[SLOT_MAX + slot].sDuration;
-
-	money = static_cast<int>((((pTable->BuyPrice - 10) / 10000.0f) + pow(pTable->BuyPrice, 0.75))
-							 * quantity / (double) durability);
-	if (money > m_pUserData->m_iGold)
-		goto fail_return;
-
-	CurrencyChange(m_pUserData->m_iGold, -money);
-	if (pos == 1)
-		m_pUserData->m_sItemArray[slot].sDuration = durability;
-	else if (pos == 2)
-		m_pUserData->m_sItemArray[SLOT_MAX + slot].sDuration = durability;
-
-	SetByte(sendBuffer, WIZ_ITEM_REPAIR, sendIndex);
-	SetByte(sendBuffer, 0x01, sendIndex);
-	SetDWORD(sendBuffer, m_pUserData->m_iGold, sendIndex);
-	Send(sendBuffer, sendIndex);
-	return;
-
-fail_return:
-	SetByte(sendBuffer, WIZ_ITEM_REPAIR, sendIndex);
-	SetByte(sendBuffer, 0x00, sendIndex);
-	SetDWORD(sendBuffer, m_pUserData->m_iGold, sendIndex);
-	Send(sendBuffer, sendIndex);
 }
 
 void CUser::Type4Duration(double currentTime)

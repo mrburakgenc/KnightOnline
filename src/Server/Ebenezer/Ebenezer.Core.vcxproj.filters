@@ -51,6 +51,12 @@
     <Filter Include="features\chat\handlers">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555509}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\item-repair">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555550C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\item-repair\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555550D}</UniqueIdentifier>
+    </Filter>
     <Filter Include="features\loyalty">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-55555555550A}</UniqueIdentifier>
     </Filter>
@@ -148,6 +154,12 @@
     </ClCompile>
     <ClCompile Include="features\chat\ChatModule.cpp">
       <Filter>features\chat</Filter>
+    </ClCompile>
+    <ClCompile Include="features\item-repair\handlers\ItemRepairService.cpp">
+      <Filter>features\item-repair\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="features\item-repair\ItemRepairModule.cpp">
+      <Filter>features\item-repair</Filter>
     </ClCompile>
     <ClCompile Include="features\loyalty\handlers\LoyaltyService.cpp">
       <Filter>features\loyalty\handlers</Filter>
@@ -270,6 +282,12 @@
     </ClInclude>
     <ClInclude Include="features\chat\ChatModule.h">
       <Filter>features\chat</Filter>
+    </ClInclude>
+    <ClInclude Include="features\item-repair\handlers\ItemRepairService.h">
+      <Filter>features\item-repair\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="features\item-repair\ItemRepairModule.h">
+      <Filter>features\item-repair</Filter>
     </ClInclude>
     <ClInclude Include="features\loyalty\handlers\LoyaltyService.h">
       <Filter>features\loyalty\handlers</Filter>

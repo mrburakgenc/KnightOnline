@@ -23,6 +23,7 @@
 #include <Ebenezer/binder/EbenezerBinder.h>
 
 #include <Ebenezer/features/chat/ChatModule.h>
+#include <Ebenezer/features/item-repair/ItemRepairModule.h>
 
 #include <fstream>
 #include <ranges>
@@ -335,6 +336,7 @@ bool EbenezerApp::OnStart()
 	// opcodes; new feature slices add a Register call here.
 	spdlog::info("EbenezerApp::OnStart: registering migrated feature modules");
 	Features::Chat::ChatModule::Register(m_PacketRouter, m_ChatService);
+	Features::ItemRepair::ItemRepairModule::Register(m_PacketRouter, m_ItemRepairService);
 	spdlog::info("EbenezerApp::OnStart: PacketRouter has {} bound opcode(s)",
 		m_PacketRouter.BoundCount());
 

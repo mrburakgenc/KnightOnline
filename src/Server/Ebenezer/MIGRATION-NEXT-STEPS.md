@@ -1,7 +1,7 @@
 # Ebenezer VSA Migration — Next-Steps Handoff
 
 **Branch:** `arch/ebenezer-vsa-migration`
-**Last commit checked in:** `43e1692c` (Phase 3.3 — Loyalty)
+**Last commit checked in:** Phase 3.4 — Item Repair (this commit).
 **Remote:** `origin/arch/ebenezer-vsa-migration` is up to date.
 
 This document is the resume point for future sessions (any agent, any human). Read this **before** `ARCHITECTURE.md` and `MIGRATION-INVENTORY.md`; those are the contract and the catalog, this is the bookmark.
@@ -18,10 +18,11 @@ This document is the resume point for future sessions (any agent, any human). Re
 | 1 | `features/gold/`               | Service-only   | `0083301c`   | `CUser::GoldGain` / `GoldLose` are 2-line forwarders.        |
 | 2 | `features/chat/`               | Router-bound   | `60404a42`   | Binds `WIZ_CHAT` (0x10) and `WIZ_CHAT_TARGET` (0x11).        |
 | 3 | `features/loyalty/`            | Service-only   | `43e1692c`   | NP + Manner + chicken-party distribution preserved verbatim. |
+| 4 | `features/item-repair/`        | Router-bound   | (this commit)| Binds `WIZ_ITEM_REPAIR` (NPC blacksmith durability repair). |
 
 ### Shared infrastructure (Phase 2, ready for use)
 
-- `shared/infrastructure/network/PacketRouter` — opcode → handler map. Currently 2 opcodes bound (chat).
+- `shared/infrastructure/network/PacketRouter` — opcode → handler map. Currently 3 opcodes bound (chat × 2, item-repair).
 - `shared/infrastructure/tick/TickScheduler` — periodic-task subscriber. Currently 0 subscriptions.
 - `shared/infrastructure/persistence/SqlHelpers` — `ExecuteSql`, `SqlEscape`. Used by the King System repo.
 
@@ -83,12 +84,11 @@ Each line is a 30-60 minute migration once you have the patterns memorized.
 
 | #  | Slice                      | Pattern | Why next                                                          |
 |----|----------------------------|---------|-------------------------------------------------------------------|
-| 4  | `features/item-repair/`    | Router-bound | `WIZ_ITEM_REPAIR` (~70 LOC). NPC-driven, isolated.            |
 | 5  | `features/promotion/`      | Router-bound | `WIZ_CLASS_CHANGE` (~80 LOC). Lvl 60 class change.            |
 | 6  | `features/home/`           | Router-bound | `WIZ_HOME` + `WIZ_REGENE` (~280 LOC). Bind point + resurrect. |
 | 7  | `features/party-bbs/`      | Router-bound | `WIZ_PARTY_BBS` (~100 LOC). Group-finder posting.             |
 
-These four complete the "low-risk" pass. After that, `User.cpp` should be down to ~13,500 LOC.
+These three (plus item-repair, already shipped) complete the "low-risk" pass. After that, `User.cpp` should be down to ~13,500 LOC.
 
 ### Phase 3B (medium-risk)
 
@@ -210,4 +210,4 @@ Per-slice gameplay smoke tests (do these in-game with `LeqenDRapToR`):
 
 ---
 
-Last updated: Phase 3.3 commit (Loyalty).
+Last updated: Phase 3.4 commit (Item Repair).

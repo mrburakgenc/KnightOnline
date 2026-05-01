@@ -497,7 +497,6 @@ public:
 	void SendAllKnightsID();
 	uint8_t ItemCountChange(int itemid, int type, int amount);
 	void Type4Duration(double currentTime);
-	void ItemRepair(char* pBuf);
 	int ExchangeDone();
 	void HPTimeChange(double currentTime);
 	void HPTimeChangeType3(double currentTime);
