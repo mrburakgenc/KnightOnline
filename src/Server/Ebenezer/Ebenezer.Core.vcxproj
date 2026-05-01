@@ -191,6 +191,7 @@
     <ClCompile Include="features\home\HomeModule.cpp" />
     <ClCompile Include="features\item-repair\handlers\ItemRepairService.cpp" />
     <ClCompile Include="features\item-repair\ItemRepairModule.cpp" />
+    <ClCompile Include="features\leveling\handlers\LevelingService.cpp" />
     <ClCompile Include="features\loyalty\handlers\LoyaltyService.cpp" />
     <ClCompile Include="features\party-bbs\handlers\PartyBbsService.cpp" />
     <ClCompile Include="features\party-bbs\PartyBbsModule.cpp" />
@@ -213,6 +214,7 @@
     <ClInclude Include="features\home\HomeModule.h" />
     <ClInclude Include="features\item-repair\handlers\ItemRepairService.h" />
     <ClInclude Include="features\item-repair\ItemRepairModule.h" />
+    <ClInclude Include="features\leveling\handlers\LevelingService.h" />
     <ClInclude Include="features\loyalty\handlers\LoyaltyService.h" />
     <ClInclude Include="features\party-bbs\handlers\PartyBbsService.h" />
     <ClInclude Include="features\party-bbs\PartyBbsModule.h" />

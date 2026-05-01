@@ -3664,120 +3664,12 @@ int16_t CUser::GetACDamage(int damage, int tid)
 
 void CUser::ExpChange(int iExp)
 {
-	int sendIndex = 0;
-	char sendBuffer[256] {};
-
-	if (m_pUserData->m_bLevel < 6 && iExp < 0)
-		return;
-
-	if (m_pUserData->m_bZone == ZONE_BATTLE && iExp < 0)
-		return;
-
-	/*
-	if (m_pUserData->m_bZone != m_pUserData->m_bNation
-		&& m_pUserData->m_bZone < 3
-		&& iExp < 0)
-		iExp = iExp / 10;
-*/
-
-	m_pUserData->m_iExp += iExp;
-
-	if (m_pUserData->m_iExp < 0)
-	{
-		if (m_pUserData->m_bLevel > 5)
-		{
-			--m_pUserData->m_bLevel;
-			m_pUserData->m_iExp += m_pMain->m_LevelUpTableArray[m_pUserData->m_bLevel - 1]
-									   ->RequiredExp;
-			LevelChange(m_pUserData->m_bLevel, false);
-			return;
-		}
-	}
-	else if (m_pUserData->m_iExp >= m_iMaxExp)
-	{
-		if (m_pUserData->m_bLevel >= MAX_LEVEL)
-		{
-			m_pUserData->m_iExp = m_iMaxExp;
-			return;
-		}
-
-		m_pUserData->m_iExp = m_pUserData->m_iExp - m_iMaxExp;
-		++m_pUserData->m_bLevel;
-
-		LevelChange(m_pUserData->m_bLevel);
-		return;
-	}
-
-	SetByte(sendBuffer, WIZ_EXP_CHANGE, sendIndex);
-	SetDWORD(sendBuffer, m_pUserData->m_iExp, sendIndex);
-	Send(sendBuffer, sendIndex);
-
-	if (iExp < 0)
-		m_iLostExp = -iExp;
+	m_pMain->m_LevelingService.ExpChange(*this, iExp);
 }
 
 void CUser::LevelChange(int16_t level, bool bLevelUp)
 {
-	if (level < 1 || level > MAX_LEVEL)
-		return;
-
-	int sendIndex = 0;
-	char sendBuffer[256] {};
-
-	if (bLevelUp)
-	{
-		if ((m_pUserData->m_bPoints + m_pUserData->m_bSta + m_pUserData->m_bStr
-				+ m_pUserData->m_bDex + m_pUserData->m_bIntel + m_pUserData->m_bCha)
-			< (300 + 3 * (level - 1)))
-			m_pUserData->m_bPoints += 3;
-
-		if (level > 9
-			&& (m_pUserData->m_bstrSkill[0] + m_pUserData->m_bstrSkill[1]
-				   + m_pUserData->m_bstrSkill[2] + m_pUserData->m_bstrSkill[3]
-				   + m_pUserData->m_bstrSkill[4] + m_pUserData->m_bstrSkill[5]
-				   + m_pUserData->m_bstrSkill[6] + m_pUserData->m_bstrSkill[7]
-				   + m_pUserData->m_bstrSkill[8])
-				   < (2 * (level - 9)))
-			m_pUserData->m_bstrSkill[0] += 2; // Skill Points up
-	}
-
-	m_iMaxExp = m_pMain->m_LevelUpTableArray[level - 1]->RequiredExp;
-
-	SetSlotItemValue();
-	SetUserAbility();
-
-	m_pUserData->m_sMp = m_iMaxMp;
-	HpChange(m_iMaxHp);
-
-	Send2AI_UserUpdateInfo();
-
-	memset(sendBuffer, 0, sizeof(sendBuffer));
-	sendIndex = 0;
-	SetByte(sendBuffer, WIZ_LEVEL_CHANGE, sendIndex);
-	SetShort(sendBuffer, _socketId, sendIndex);
-	SetByte(sendBuffer, m_pUserData->m_bLevel, sendIndex);
-	SetByte(sendBuffer, m_pUserData->m_bPoints, sendIndex);
-	SetByte(sendBuffer, m_pUserData->m_bstrSkill[0], sendIndex);
-	SetDWORD(sendBuffer, m_iMaxExp, sendIndex);
-	SetDWORD(sendBuffer, m_pUserData->m_iExp, sendIndex);
-	SetShort(sendBuffer, m_iMaxHp, sendIndex);
-	SetShort(sendBuffer, m_pUserData->m_sHp, sendIndex);
-	SetShort(sendBuffer, m_iMaxMp, sendIndex);
-	SetShort(sendBuffer, m_pUserData->m_sMp, sendIndex);
-	SetShort(sendBuffer, GetMaxWeightForClient(), sendIndex);
-	SetShort(sendBuffer, GetCurrentWeightForClient(), sendIndex);
-	m_pMain->Send_Region(sendBuffer, sendIndex, m_pUserData->m_bZone, m_RegionX, m_RegionZ);
-
-	if (m_sPartyIndex != -1)
-	{
-		memset(sendBuffer, 0, sizeof(sendBuffer));
-		sendIndex = 0;
-		SetByte(sendBuffer, WIZ_PARTY, sendIndex);
-		SetByte(sendBuffer, PARTY_LEVELCHANGE, sendIndex);
-		SetShort(sendBuffer, _socketId, sendIndex);
-		SetByte(sendBuffer, m_pUserData->m_bLevel, sendIndex);
-		m_pMain->Send_PartyMember(m_sPartyIndex, sendBuffer, sendIndex);
-	}
+	m_pMain->m_LevelingService.LevelChange(*this, level, bLevelUp);
 }
 
 void CUser::PointChange(char* pBuf)

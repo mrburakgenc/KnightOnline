@@ -22,6 +22,7 @@
 #include <Ebenezer/features/chat/handlers/ChatService.h>
 #include <Ebenezer/features/home/handlers/HomeService.h>
 #include <Ebenezer/features/item-repair/handlers/ItemRepairService.h>
+#include <Ebenezer/features/leveling/handlers/LevelingService.h>
 #include <Ebenezer/features/loyalty/handlers/LoyaltyService.h>
 #include <Ebenezer/features/party-bbs/handlers/PartyBbsService.h>
 #include <Ebenezer/features/promotion/handlers/PromotionService.h>
@@ -303,6 +304,7 @@ public:
 	Features::Chat::ChatService             m_ChatService;
 	Features::Home::HomeService             m_HomeService;
 	Features::ItemRepair::ItemRepairService m_ItemRepairService;
+	Features::Leveling::LevelingService     m_LevelingService;
 	Features::Loyalty::LoyaltyService       m_LoyaltyService;
 	Features::PartyBbs::PartyBbsService     m_PartyBbsService;
 	Features::Promotion::PromotionService   m_PromotionService;

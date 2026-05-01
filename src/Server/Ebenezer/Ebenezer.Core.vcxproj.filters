@@ -81,6 +81,12 @@
     <Filter Include="features\party-bbs\handlers">
       <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555513}</UniqueIdentifier>
     </Filter>
+    <Filter Include="features\leveling">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555514}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="features\leveling\handlers">
+      <UniqueIdentifier>{a1b2c3d4-2222-3333-4444-555555555515}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AISocket.cpp">
@@ -199,6 +205,9 @@
     </ClCompile>
     <ClCompile Include="features\party-bbs\PartyBbsModule.cpp">
       <Filter>features\party-bbs</Filter>
+    </ClCompile>
+    <ClCompile Include="features\leveling\handlers\LevelingService.cpp">
+      <Filter>features\leveling\handlers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -345,6 +354,9 @@
     </ClInclude>
     <ClInclude Include="features\party-bbs\PartyBbsModule.h">
       <Filter>features\party-bbs</Filter>
+    </ClInclude>
+    <ClInclude Include="features\leveling\handlers\LevelingService.h">
+      <Filter>features\leveling\handlers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

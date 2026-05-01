@@ -1,7 +1,7 @@
 # Ebenezer VSA Migration — Next-Steps Handoff
 
 **Branch:** `arch/ebenezer-vsa-migration`
-**Last commit checked in:** `d8753164` (Phase 3.7 — Party BBS). Phase 3A "low-risk" pass complete.
+**Last commit checked in:** Phase 3.8 — Leveling (this commit). First Phase 3B (medium-risk) slice shipped.
 **Remote:** `origin/arch/ebenezer-vsa-migration` is up to date.
 
 This document is the resume point for future sessions (any agent, any human). Read this **before** `ARCHITECTURE.md` and `MIGRATION-INVENTORY.md`; those are the contract and the catalog, this is the bookmark.
@@ -22,6 +22,7 @@ This document is the resume point for future sessions (any agent, any human). Re
 | 5 | `features/promotion/`          | Router-bound   | `adff83df`   | Binds `WIZ_CLASS_CHANGE` (lvl-60 promotion + stat/skill respec quote). |
 | 6 | `features/home/`               | Router-bound   | `d036a09f`   | Binds `WIZ_HOME` + `WIZ_REGENE` (bind point + resurrect; CUser::Regene retained for clerical magic). |
 | 7 | `features/party-bbs/`          | Router-bound   | `d8753164`   | Binds `WIZ_PARTY_BBS` (LFG bulletin board: register / delete / needed). |
+| 8 | `features/leveling/`           | Service-only   | (this commit)| Owns `ExpChange` + `LevelChange`; CUser methods are forwarders. |
 
 ### Shared infrastructure (Phase 2, ready for use)
 
@@ -91,7 +92,6 @@ The "low-risk" pass (item-repair, promotion, home, party-bbs) is now shipped. Pi
 
 | #  | Slice                  | Pattern  | Notes                                                                  |
 |----|------------------------|----------|------------------------------------------------------------------------|
-| 8  | `features/leveling/`   | Service  | `ExpChange`, `LevelChange`. Triggers Promotion at lvl 60.              |
 | 9  | `features/stats/`      | Router   | `WIZ_POINT_CHANGE`, `WIZ_SKILLPT_CHANGE`. Stat / skill alloc.          |
 | 10 | `features/party/`      | Router   | `WIZ_PARTY`. Runtime state in `EbenezerApp::m_PartyMap`.               |
 | 11 | `features/object-events/`| Service| Trap / lever / gate / bind state machines.                             |
@@ -168,6 +168,7 @@ Per-slice gameplay smoke tests (do these in-game with `LeqenDRapToR`):
 | Promotion      | Lvl 60 char triggers promotion quest. Respec NPC: ask cost (sub_type 1/2 → quote).      |
 | Home           | `/town` warps to nation start; die → resurrect at bind; cleric Resurrection on a corpse. |
 | Party BBS      | Open the LFG board: register a note, request the needed list, delete your note.        |
+| Leveling       | Kill mob → exp bar moves; cross threshold → WIZ_LEVEL_CHANGE; die in non-battle zone above lvl 6 → exp drops. |
 | Home           | Die → respawn at bind; type `/home` (or whatever the actual binding is).               |
 
 ---
@@ -209,4 +210,4 @@ Per-slice gameplay smoke tests (do these in-game with `LeqenDRapToR`):
 
 ---
 
-Last updated: Phase 3.7 commit (Party BBS) — Phase 3A complete.
+Last updated: Phase 3.8 commit (Leveling) — first Phase 3B slice shipped.
